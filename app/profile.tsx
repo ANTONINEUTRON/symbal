@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, Trophy, Target, RotateCcw } from 'lucide-react-native';
+import { Star, Trophy, Target, RotateCcw, ArrowLeft } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const userStats = {
@@ -17,8 +18,19 @@ export default function ProfileScreen() {
       colors={['#1a1a2e', '#16213e', '#0f3460']}
       style={styles.container}
     >
+      <View style={styles.header}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <ArrowLeft size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.placeholder} />
+      </View>
+
       <ScrollView style={styles.content}>
-        <View style={styles.header}>
+        <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <LinearGradient
               colors={['#8B5CF6', '#EC4899']}
@@ -94,12 +106,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  placeholder: {
+    width: 40,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
   },
-  header: {
+  profileHeader: {
     alignItems: 'center',
     marginBottom: 32,
   },

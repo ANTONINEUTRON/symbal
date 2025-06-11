@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, CreditCard as Edit3 } from 'lucide-react-native';
+import { Star, CreditCard as Edit3, User } from 'lucide-react-native';
+import { router } from 'expo-router';
 
 interface XPTrackerProps {
   xp: number;
@@ -17,6 +18,10 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.thoughtButton} onPress={onThoughtPress}>
+          <Edit3 size={16} color="white" />
+        </TouchableOpacity>
+        
         <View style={styles.xpSection}>
           <View style={styles.xpInfo}>
             <Star size={16} color="#F59E0B" />
@@ -31,8 +36,16 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
           </View>
         </View>
         
-        <TouchableOpacity style={styles.thoughtButton} onPress={onThoughtPress}>
-          <Edit3 size={16} color="white" />
+        <TouchableOpacity 
+          style={styles.profileButton} 
+          onPress={() => router.push('/profile')}
+        >
+          <LinearGradient
+            colors={['#8B5CF6', '#EC4899']}
+            style={styles.profileButtonGradient}
+          >
+            <User size={20} color="white" />
+          </LinearGradient>
         </TouchableOpacity>
       </View>
       
@@ -58,13 +71,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 8,
   },
+  thoughtButton: {
+    backgroundColor: 'rgba(139, 92, 246, 0.8)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   xpSection: {
     flex: 1,
-    marginRight: 16,
+    marginHorizontal: 16,
   },
   xpInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
   },
   xpText: {
@@ -87,9 +109,11 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 8,
   },
-  thoughtButton: {
-    backgroundColor: 'rgba(139, 92, 246, 0.8)',
+  profileButton: {
     borderRadius: 20,
+    overflow: 'hidden',
+  },
+  profileButtonGradient: {
     width: 40,
     height: 40,
     alignItems: 'center',
