@@ -10,7 +10,7 @@ import {
   Switch
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, Trophy, Target, RotateCcw, ArrowLeft, LogOut, Settings, Bell, Shield, FileText, Trash2, MessageSquare, CreditCard as Edit, Crown, Mic, MicOff, Sparkles } from 'lucide-react-native';
+import { Star, Trophy, Target, RotateCcw, ArrowLeft, LogOut, Settings, Bell, Shield, FileText, Trash2, MessageSquare, CreditCard as Edit, Crown, Mic, MicOff, Sparkles, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -29,11 +29,14 @@ export default function ProfileScreen() {
     storiesUnlocked: 8,
     isPremium: false,
     achievements: [
-      { name: 'First Steps', description: 'Complete your first story', icon: '🚀' },
-      { name: 'Truth Seeker', description: 'Master the true/false challenges', icon: '🔍' },
-      { name: 'Word Master', description: 'Unscramble 10 words perfectly', icon: '📝' },
-      { name: 'Speed Demon', description: 'Complete a typing race in record time', icon: '⚡' },
-      { name: 'Puzzle Solver', description: 'Solve 5 passage puzzles', icon: '🧩' }
+      { id: '1', name: 'First Steps', description: 'Complete your first story', icon: '🚀', unlockedAt: '2024-12-01', category: 'Story' },
+      { id: '2', name: 'Truth Seeker', description: 'Master the true/false challenges', icon: '🔍', unlockedAt: '2024-12-02', category: 'Game' },
+      { id: '3', name: 'Word Master', description: 'Unscramble 10 words perfectly', icon: '📝', unlockedAt: '2024-12-03', category: 'Game' },
+      { id: '4', name: 'Speed Demon', description: 'Complete a typing race in record time', icon: '⚡', unlockedAt: '2024-12-04', category: 'Game' },
+      { id: '5', name: 'Puzzle Solver', description: 'Solve 5 passage puzzles', icon: '🧩', unlockedAt: '2024-12-05', category: 'Game' },
+      { id: '6', name: 'Explorer', description: 'Discover 10 new story paths', icon: '🗺️', unlockedAt: '2024-12-06', category: 'Story' },
+      { id: '7', name: 'Perfectionist', description: 'Complete 5 games with 100% accuracy', icon: '💯', unlockedAt: '2024-12-07', category: 'Game' },
+      { id: '8', name: 'Storyteller', description: 'Create your first custom experience', icon: '📚', unlockedAt: '2024-12-08', category: 'Creation' }
     ]
   };
 
@@ -133,11 +136,18 @@ export default function ProfileScreen() {
     router.push('/experience-manager');
   };
 
+  const handleSeeAllAchievements = () => {
+    router.push('/achievements');
+  };
+
   // If user is not signed in, redirect to auth
   if (!user) {
     router.replace('/auth');
     return null;
   }
+
+  const displayedAchievements = userStats.achievements.slice(0, 5);
+  const hasMoreAchievements = userStats.achievements.length > 5;
 
   const renderAchievementsTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
@@ -191,9 +201,21 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Achievements</Text>
-        {userStats.achievements.map((achievement, index) => (
-          <View key={index} style={styles.achievementItem}>
+        <View style={styles.achievementHeader}>
+          <Text style={styles.sectionTitle}>Achievements</Text>
+          {hasMoreAchievements && (
+            <TouchableOpacity 
+              style={styles.seeMoreButton}
+              onPress={handleSeeAllAchievements}
+            >
+              <Text style={styles.seeMoreText}>See More</Text>
+              <ChevronRight size={16} color="#8B5CF6" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        {displayedAchievements.map((achievement, index) => (
+          <View key={achievement.id} style={styles.achievementItem}>
             <View style={styles.achievementIcon}>
               <Text style={styles.achievementEmoji}>{achievement.icon}</Text>
             </View>
@@ -548,6 +570,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
+  },
+  achievementHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 4,
+  },
+  seeMoreText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: '600',
   },
   achievementItem: {
     flexDirection: 'row',
