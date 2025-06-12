@@ -23,7 +23,10 @@ import {
   FileText,
   Trash2,
   MessageSquare,
-  Plus,
+  Edit,
+  Crown,
+  Mic,
+  MicOff,
   Sparkles
 } from 'lucide-react-native';
 import { router } from 'expo-router';
@@ -35,12 +38,14 @@ export default function ProfileScreen() {
   const { user, signOut, isLoading } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [voiceAssistanceEnabled, setVoiceAssistanceEnabled] = useState(false);
 
   const userStats = {
     xp: 150,
     level: 3,
     gamesCompleted: 12,
     storiesUnlocked: 8,
+    isPremium: false,
     achievements: [
       { name: 'First Steps', description: 'Complete your first story', icon: '🚀' },
       { name: 'Truth Seeker', description: 'Master the true/false challenges', icon: '🔍' },
@@ -51,6 +56,28 @@ export default function ProfileScreen() {
   };
 
   const settingsItems = [
+    {
+      icon: Edit,
+      title: 'Edit Account',
+      subtitle: 'Update your profile information',
+      type: 'link',
+      onPress: () => router.push('/edit-account')
+    },
+    {
+      icon: Crown,
+      title: 'Upgrade to Premium',
+      subtitle: 'Unlock exclusive features and stories',
+      type: 'premium',
+      onPress: () => router.push('/premium')
+    },
+    {
+      icon: voiceAssistanceEnabled ? Mic : MicOff,
+      title: 'Voice Assistance Mode',
+      subtitle: 'Navigate with voice commands',
+      type: 'toggle',
+      value: voiceAssistanceEnabled,
+      onToggle: setVoiceAssistanceEnabled
+    },
     {
       icon: Bell,
       title: 'Notifications',
@@ -121,16 +148,7 @@ export default function ProfileScreen() {
   };
 
   const handleFabPress = () => {
-    Alert.alert(
-      'Quick Actions',
-      'What would you like to do?',
-      [
-        { text: 'Start New Story', onPress: () => router.push('/') },
-        { text: 'View Achievements', onPress: () => setActiveTab(0) },
-        { text: 'Settings', onPress: () => setActiveTab(1) },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
+    router.push('/experience-manager');
   };
 
   // If user is not signed in, redirect to auth
@@ -151,10 +169,23 @@ export default function ProfileScreen() {
               {user.name.charAt(0).toUpperCase()}
             </Text>
           </LinearGradient>
+          {userStats.isPremium && (
+            <View style={styles.premiumBadge}>
+              <Crown size={16} color="#F59E0B" />
+            </View>
+          )}
         </View>
         <Text style={styles.username}>{user.name}</Text>
         <Text style={styles.email}>{user.email}</Text>
-        <Text style={styles.level}>Level {userStats.level}</Text>
+        <View style={styles.levelContainer}>
+          <Text style={styles.level}>Level {userStats.level}</Text>
+          {userStats.isPremium && (
+            <View style={styles.premiumTag}>
+              <Crown size={12} color="#F59E0B" />
+              <Text style={styles.premiumText}>Premium</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.statsGrid}>
@@ -229,13 +260,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
+        <Text style={styles.sectionTitle}>Account & Features</Text>
         {settingsItems.map((item, index) => (
           <TouchableOpacity
             key={index}
             style={[
               styles.settingsItem,
-              item.type === 'danger' && styles.settingsItemDanger
+              item.type === 'danger' && styles.settingsItemDanger,
+              item.type === 'premium' && styles.settingsItemPremium
             ]}
             onPress={item.onPress}
             disabled={item.type === 'toggle'}
@@ -243,17 +275,22 @@ export default function ProfileScreen() {
             <View style={styles.settingsItemLeft}>
               <View style={[
                 styles.settingsItemIcon,
-                item.type === 'danger' && styles.settingsItemIconDanger
+                item.type === 'danger' && styles.settingsItemIconDanger,
+                item.type === 'premium' && styles.settingsItemIconPremium
               ]}>
                 <item.icon 
                   size={20} 
-                  color={item.type === 'danger' ? '#EF4444' : '#8B5CF6'} 
+                  color={
+                    item.type === 'danger' ? '#EF4444' : 
+                    item.type === 'premium' ? '#F59E0B' : '#8B5CF6'
+                  } 
                 />
               </View>
               <View style={styles.settingsItemContent}>
                 <Text style={[
                   styles.settingsItemTitle,
-                  item.type === 'danger' && styles.settingsItemTitleDanger
+                  item.type === 'danger' && styles.settingsItemTitleDanger,
+                  item.type === 'premium' && styles.settingsItemTitlePremium
                 ]}>
                   {item.title}
                 </Text>
@@ -269,12 +306,18 @@ export default function ProfileScreen() {
                 thumbColor={item.value ? '#EC4899' : '#9CA3AF'}
               />
             )}
+            
+            {item.type === 'premium' && (
+              <View style={styles.premiumIndicator}>
+                <Crown size={16} color="#F59E0B" />
+              </View>
+            )}
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>Account Information</Text>
         <View style={styles.accountInfo}>
           <Text style={styles.accountLabel}>Email</Text>
           <Text style={styles.accountValue}>{user.email}</Text>
@@ -285,25 +328,16 @@ export default function ProfileScreen() {
         </View>
         <View style={styles.accountInfo}>
           <Text style={styles.accountLabel}>Account Type</Text>
-          <Text style={styles.accountValue}>Free</Text>
+          <View style={styles.accountTypeContainer}>
+            <Text style={styles.accountValue}>
+              {userStats.isPremium ? 'Premium' : 'Free'}
+            </Text>
+            {userStats.isPremium && <Crown size={16} color="#F59E0B" />}
+          </View>
         </View>
       </View>
 
-      <View style={styles.signOutSection}>
-        <TouchableOpacity
-          style={styles.signOutButton}
-          onPress={handleSignOut}
-          disabled={isLoading}
-        >
-          <LinearGradient
-            colors={['#EF4444', '#DC2626']}
-            style={styles.signOutButtonGradient}
-          >
-            <LogOut size={20} color="white" />
-            <Text style={styles.signOutButtonText}>Sign Out</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.bottomSpacing} />
     </ScrollView>
   );
 
@@ -320,7 +354,13 @@ export default function ProfileScreen() {
           <ArrowLeft size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          style={styles.signOutButton}
+          onPress={handleSignOut}
+          disabled={isLoading}
+        >
+          <LogOut size={20} color="white" />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.tabBar}>
@@ -386,8 +426,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  headerSpacer: {
+  signOutButton: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderRadius: 20,
     width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabBar: {
     flexDirection: 'row',
@@ -429,6 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   avatarContainer: {
+    position: 'relative',
     marginBottom: 16,
   },
   avatar: {
@@ -443,6 +489,16 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
   },
+  premiumBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#1a1a2e',
+    borderRadius: 12,
+    padding: 4,
+    borderWidth: 2,
+    borderColor: '#F59E0B',
+  },
   username: {
     color: 'white',
     fontSize: 24,
@@ -454,9 +510,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 8,
   },
+  levelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   level: {
     color: '#8B5CF6',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  premiumTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    gap: 4,
+  },
+  premiumText: {
+    color: '#F59E0B',
+    fontSize: 12,
     fontWeight: '600',
   },
   statsGrid: {
@@ -586,6 +661,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
+  settingsItemPremium: {
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
   settingsItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -603,6 +683,9 @@ const styles = StyleSheet.create({
   settingsItemIconDanger: {
     backgroundColor: 'rgba(239, 68, 68, 0.2)',
   },
+  settingsItemIconPremium: {
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+  },
   settingsItemContent: {
     flex: 1,
   },
@@ -615,10 +698,16 @@ const styles = StyleSheet.create({
   settingsItemTitleDanger: {
     color: '#EF4444',
   },
+  settingsItemTitlePremium: {
+    color: '#F59E0B',
+  },
   settingsItemSubtitle: {
     color: '#9CA3AF',
     fontSize: 14,
     lineHeight: 18,
+  },
+  premiumIndicator: {
+    marginLeft: 8,
   },
   accountInfo: {
     flexDirection: 'row',
@@ -637,25 +726,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  signOutSection: {
-    marginBottom: 100, // Extra space for FAB
-  },
-  signOutButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  signOutButtonGradient: {
+  accountTypeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    gap: 8,
   },
-  signOutButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  bottomSpacing: {
+    height: 100, // Extra space for FAB
   },
   fab: {
     position: 'absolute',
