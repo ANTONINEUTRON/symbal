@@ -10,21 +10,7 @@ import {
   Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  ArrowLeft, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Play, 
-  Star,
-  Clock,
-  Users,
-  Sparkles,
-  Save,
-  X,
-  Image as ImageIcon,
-  Palette
-} from 'lucide-react-native';
+import { ArrowLeft, Plus, CreditCard as Edit, Trash2, Play, Star, Clock, Users, Sparkles, Save, X, Image as ImageIcon, Palette } from 'lucide-react-native';
 import { router } from 'expo-router';
 
 interface Experience {
