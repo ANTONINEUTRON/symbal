@@ -10,25 +10,7 @@ import {
   Switch
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Star, 
-  Trophy, 
-  Target, 
-  RotateCcw, 
-  ArrowLeft, 
-  LogOut,
-  Settings,
-  Bell,
-  Shield,
-  FileText,
-  Trash2,
-  MessageSquare,
-  Edit,
-  Crown,
-  Mic,
-  MicOff,
-  Sparkles
-} from 'lucide-react-native';
+import { Star, Trophy, Target, RotateCcw, ArrowLeft, LogOut, Settings, Bell, Shield, FileText, Trash2, MessageSquare, CreditCard as Edit, Crown, Mic, MicOff, Sparkles } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
