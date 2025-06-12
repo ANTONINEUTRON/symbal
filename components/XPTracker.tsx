@@ -12,8 +12,6 @@ interface XPTrackerProps {
 
 export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
   const level = Math.floor(xp / 50) + 1;
-  const xpInCurrentLevel = xp % 50;
-  const progressPercent = (xpInCurrentLevel / 50) * 100;
 
   return (
     <View style={styles.container}>
@@ -27,12 +25,6 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
             <Star size={16} color="#F59E0B" />
             <Text style={styles.xpText}>{xp} XP</Text>
             <Text style={styles.levelText}>Lvl {level}</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <LinearGradient
-              colors={['#8B5CF6', '#EC4899']}
-              style={[styles.progressFill, { width: `${progressPercent}%` }]}
-            />
           </View>
         </View>
         
@@ -87,7 +79,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
   },
   xpText: {
     color: 'white',
@@ -99,15 +90,6 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
     fontSize: 12,
     marginLeft: 8,
-  },
-  progressBar: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 8,
-    height: 6,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 8,
   },
   profileButton: {
     borderRadius: 20,
