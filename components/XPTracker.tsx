@@ -12,6 +12,18 @@ interface XPTrackerProps {
 
 export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
   const level = Math.floor(xp / 50) + 1;
+  
+  // For demo purposes, we'll simulate user authentication state
+  // In a real app, this would come from your auth context/state management
+  const isSignedIn = false; // Change this to true to test signed-in state
+
+  const handleProfilePress = () => {
+    if (isSignedIn) {
+      router.push('/profile');
+    } else {
+      router.push('/auth');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -30,7 +42,7 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
         
         <TouchableOpacity 
           style={styles.profileButton} 
-          onPress={() => router.push('/profile')}
+          onPress={handleProfilePress}
         >
           <LinearGradient
             colors={['#8B5CF6', '#EC4899']}
