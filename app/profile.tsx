@@ -1,10 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, Trophy, Target, RotateCcw, ArrowLeft } from 'lucide-react-native';
+import { Star, Trophy, Target, RotateCcw, ArrowLeft, LogOut } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProfileScreen() {
+  const { user, signOut, isLoading } = useAuth();
+
   const userStats = {
     xp: 150,
     level: 3,
@@ -12,6 +15,34 @@ export default function ProfileScreen() {
     storiesUnlocked: 8,
     achievements: ['First Steps', 'Truth Seeker', 'Word Master']
   };
+
+  const handleSignOut = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+              router.replace('/');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to sign out');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // If user is not signed in, redirect to auth
+  if (!user) {
+    router.replace('/auth');
+    return null;
+  }
 
   return (
     <LinearGradient
@@ -26,7 +57,13 @@ export default function ProfileScreen() {
           <ArrowLeft size={24} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={styles.signOutButton}
+          onPress={handleSignOut}
+          disabled={isLoading}
+        >
+          <LogOut size={20} color="white" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -36,10 +73,13 @@ export default function ProfileScreen() {
               colors={['#8B5CF6', '#EC4899']}
               style={styles.avatar}
             >
-              <Text style={styles.avatarText}>S</Text>
+              <Text style={styles.avatarText}>
+                {user.name.charAt(0).toUpperCase()}
+              </Text>
             </LinearGradient>
           </View>
-          <Text style={styles.username}>Story Explorer</Text>
+          <Text style={styles.username}>{user.name}</Text>
+          <Text style={styles.email}>{user.email}</Text>
           <Text style={styles.level}>Level {userStats.level}</Text>
         </View>
 
@@ -122,8 +162,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 40,
+  signOutButton: {
+    padding: 8,
   },
   content: {
     flex: 1,
@@ -153,6 +193,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
+  },
+  email: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    marginBottom: 8,
   },
   level: {
     color: '#8B5CF6',

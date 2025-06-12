@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Star, CreditCard as Edit3, User } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface XPTrackerProps {
   xp: number;
@@ -12,10 +13,7 @@ interface XPTrackerProps {
 
 export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
   const level = Math.floor(xp / 50) + 1;
-  
-  // For demo purposes, we'll simulate user authentication state
-  // In a real app, this would come from your auth context/state management
-  const isSignedIn = false; // Change this to true to test signed-in state
+  const { isSignedIn } = useAuth();
 
   const handleProfilePress = () => {
     if (isSignedIn) {

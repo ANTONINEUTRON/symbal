@@ -8,7 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Dimensions
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
@@ -22,8 +22,7 @@ import {
   Sparkles
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,7 +35,8 @@ export default function AuthScreen() {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const { signIn, signUp, isLoading } = useAuth();
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -68,15 +68,16 @@ export default function AuthScreen() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // For demo purposes, we'll just navigate to profile
-      // In a real app, you'd handle authentication here
-      router.replace('/profile');
-    }, 1500);
+    try {
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
+      } else {
+        await signUp(formData.name, formData.email, formData.password);
+      }
+      router.replace('/');
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Something went wrong');
+    }
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -85,6 +86,17 @@ export default function AuthScreen() {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setErrors({});
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
   return (
@@ -154,15 +166,16 @@ export default function AuthScreen() {
             <View style={styles.form}>
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
+                  <View style={[styles.inputWrapper, errors.name && styles.inputWrapperError]}>
                     <User size={20} color="#9CA3AF" style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.input, errors.name && styles.inputError]}
+                      style={styles.input}
                       placeholder="Full Name"
                       placeholderTextColor="#6B7280"
                       value={formData.name}
                       onChangeText={(text) => updateFormData('name', text)}
                       autoCapitalize="words"
+                      editable={!isLoading}
                     />
                   </View>
                   {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
@@ -170,10 +183,10 @@ export default function AuthScreen() {
               )}
 
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, errors.email && styles.inputWrapperError]}>
                   <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
-                    style={[styles.input, errors.email && styles.inputError]}
+                    style={styles.input}
                     placeholder="Email Address"
                     placeholderTextColor="#6B7280"
                     value={formData.email}
@@ -181,22 +194,24 @@ export default function AuthScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
+                    editable={!isLoading}
                   />
                 </View>
                 {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
               </View>
 
               <View style={styles.inputContainer}>
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, errors.password && styles.inputWrapperError]}>
                   <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
                   <TextInput
-                    style={[styles.input, errors.password && styles.inputError]}
+                    style={styles.input}
                     placeholder="Password"
                     placeholderTextColor="#6B7280"
                     value={formData.password}
                     onChangeText={(text) => updateFormData('password', text)}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
+                    editable={!isLoading}
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -214,16 +229,17 @@ export default function AuthScreen() {
 
               {!isLogin && (
                 <View style={styles.inputContainer}>
-                  <View style={styles.inputWrapper}>
+                  <View style={[styles.inputWrapper, errors.confirmPassword && styles.inputWrapperError]}>
                     <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
                     <TextInput
-                      style={[styles.input, errors.confirmPassword && styles.inputError]}
+                      style={styles.input}
                       placeholder="Confirm Password"
                       placeholderTextColor="#6B7280"
                       value={formData.confirmPassword}
                       onChangeText={(text) => updateFormData('confirmPassword', text)}
                       secureTextEntry={!showConfirmPassword}
                       autoCapitalize="none"
+                      editable={!isLoading}
                     />
                     <TouchableOpacity
                       style={styles.eyeButton}
@@ -279,7 +295,7 @@ export default function AuthScreen() {
               <Text style={styles.footerText}>
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
               </Text>
-              <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+              <TouchableOpacity onPress={toggleMode} disabled={isLoading}>
                 <Text style={styles.footerLink}>
                   {isLogin ? 'Sign Up' : 'Sign In'}
                 </Text>
@@ -380,6 +396,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
+  inputWrapperError: {
+    borderColor: '#EF4444',
+  },
   inputIcon: {
     marginLeft: 16,
     marginRight: 12,
@@ -390,9 +409,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 16,
     paddingRight: 16,
-  },
-  inputError: {
-    borderColor: '#EF4444',
   },
   eyeButton: {
     padding: 16,
