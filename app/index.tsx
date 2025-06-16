@@ -14,7 +14,7 @@ import StoryCard from '@/components/StoryCard';
 import ThoughtModal from '@/components/ThoughtModal';
 import GameModal from '@/components/GameModal';
 import XPTracker from '@/components/XPTracker';
-import PostGameInfoModal from '@/components/PostGameInfoModal';
+import PostGameInfoModal from '../components/PostGameInfoModal';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
