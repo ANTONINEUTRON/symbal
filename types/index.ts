@@ -15,6 +15,7 @@ export interface StorySegment {
   gameType: GameType;
   imageUrl?: string;
   xpReward: number;
+  postGameFact?: string;
 }
 
 export interface QuizQuestion {
@@ -59,6 +60,7 @@ export interface GameContent {
   crossword: { imageUrl: string };
   sudoku: { imageUrl: string };
   'typing-race': TypingRace[];
+  postGameFacts?: Partial<Record<GameType, string>>;
 }
 
 export interface UserProgress {
