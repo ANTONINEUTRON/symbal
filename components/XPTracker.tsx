@@ -12,7 +12,6 @@ interface XPTrackerProps {
 }
 
 export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
-  const level = Math.floor(xp / 50) + 1;
   const { isSignedIn } = useAuth();
 
   const handleProfilePress = () => {
@@ -30,12 +29,14 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
           <Edit3 size={16} color="white" />
         </TouchableOpacity>
         
-        <View style={styles.xpSection}>
-          <View style={styles.xpInfo}>
+        <View style={styles.symSection}>
+          <LinearGradient
+            colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
+            style={styles.symChip}
+          >
             <Star size={16} color="#F59E0B" />
-            <Text style={styles.xpText}>{xp} XP</Text>
-            <Text style={styles.levelText}>Lvl {level}</Text>
-          </View>
+            <Text style={styles.symText}>{xp} SYM</Text>
+          </LinearGradient>
         </View>
         
         <TouchableOpacity 
@@ -50,10 +51,6 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
           </LinearGradient>
         </TouchableOpacity>
       </View>
-      
-      <Text style={styles.storyTitle} numberOfLines={1}>
-        {currentStoryTitle}
-      </Text>
     </View>
   );
 }
@@ -71,7 +68,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
   },
   thoughtButton: {
     backgroundColor: 'rgba(139, 92, 246, 0.8)',
@@ -81,25 +77,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  xpSection: {
+  symSection: {
     flex: 1,
     marginHorizontal: 16,
+    alignItems: 'center',
   },
-  xpInfo: {
+  symChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  xpText: {
+  symText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 4,
-  },
-  levelText: {
-    color: '#8B5CF6',
-    fontSize: 12,
-    marginLeft: 8,
+    marginLeft: 6,
   },
   profileButton: {
     borderRadius: 20,
@@ -110,11 +112,5 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  storyTitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
