@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions, Modal } from 'react-native';
 import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedGestureHandler,
@@ -8,12 +8,13 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import { initialStorySegments, generateNextStory } from '@/data/storyData';
+import { initialStorySegments, generateNextStory, gameContent } from '@/data/storyData';
 import { StorySegment, UserProgress } from '@/types';
 import StoryCard from '@/components/StoryCard';
 import ThoughtModal from '@/components/ThoughtModal';
 import GameModal from '@/components/GameModal';
 import XPTracker from '@/components/XPTracker';
+import PostGameInfoModal from '@/components/PostGameInfoModal';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ export default function StoryFeed() {
   });
   const [thoughtModalVisible, setThoughtModalVisible] = useState(false);
   const [gameModalVisible, setGameModalVisible] = useState(false);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [currentGame, setCurrentGame] = useState<StorySegment | null>(null);
 
   const translateY = useSharedValue(0);
@@ -93,6 +95,11 @@ export default function StoryFeed() {
     setGameModalVisible(true);
   };
 
+  const handleShowInfo = (segment: StorySegment) => {
+    setCurrentGame(segment);
+    setInfoModalVisible(true);
+  };
+
   const handleGameComplete = (earnedXP: number) => {
     setUserProgress(prev => ({
       ...prev,
@@ -116,6 +123,7 @@ export default function StoryFeed() {
   };
 
   const currentStory = storySegments[currentIndex];
+  const isCompleted = userProgress.completedGames.includes(currentStory?.id);
 
   if (!currentStory) {
     return null;
@@ -134,7 +142,8 @@ export default function StoryFeed() {
           <StoryCard
             segment={currentStory}
             onPlayGame={() => handlePlayGame(currentStory)}
-            isCompleted={userProgress.completedGames.includes(currentStory.id)}
+            onShowInfo={() => handleShowInfo(currentStory)}
+            isCompleted={isCompleted}
           />
         </Animated.View>
       </PanGestureHandler>
@@ -152,6 +161,14 @@ export default function StoryFeed() {
           segment={currentGame}
           onClose={() => setGameModalVisible(false)}
           onComplete={handleGameComplete}
+        />
+      )}
+
+      {currentGame && (
+        <PostGameInfoModal
+          visible={infoModalVisible}
+          segment={currentGame}
+          onClose={() => setInfoModalVisible(false)}
         />
       )}
     </View>
