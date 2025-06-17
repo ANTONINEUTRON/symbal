@@ -9,24 +9,23 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { initialStorySegments, generateNextStory, gameContent } from '@/data/storyData';
-import { StorySegment, UserProgress } from '@/types';
+import { StorySegment } from '@/types';
 import StoryCard from '@/components/StoryCard';
 import ThoughtModal from '@/components/ThoughtModal';
 import GameModal from '@/components/GameModal';
 import XPTracker from '@/components/XPTracker';
 import PostGameInfoModal from '../components/PostGameInfoModal';
+import { useUserProgress } from '@/hooks/useUserProgress';
+import { useAuth } from '@/contexts/AuthContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function StoryFeed() {
+  const { isSignedIn } = useAuth();
+  const { progress, completeGame, updateThought } = useUserProgress();
+  
   const [storySegments, setStorySegments] = useState<StorySegment[]>(initialStorySegments);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    xp: 0,
-    currentStoryIndex: 0,
-    currentThought: 'adventure begins now',
-    completedGames: []
-  });
   const [thoughtModalVisible, setThoughtModalVisible] = useState(false);
   const [gameModalVisible, setGameModalVisible] = useState(false);
   const [infoModalVisible, setInfoModalVisible] = useState(false);
@@ -35,12 +34,17 @@ export default function StoryFeed() {
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
 
+  // Use progress from Supabase if signed in, otherwise use local state
+  const currentXP = isSignedIn ? (progress?.xp || 0) : 0;
+  const currentThought = isSignedIn ? (progress?.current_thought || 'adventure begins now') : 'adventure begins now';
+  const completedGames = isSignedIn ? (progress?.completed_games || []) : [];
+
   const handleSwipeUp = () => {
     if (currentIndex < storySegments.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       // Generate more story content when reaching the end
-      const newStories = generateNextStory(userProgress.currentThought, currentIndex);
+      const newStories = generateNextStory(currentThought, currentIndex);
       setStorySegments([...storySegments, ...newStories]);
       setCurrentIndex(currentIndex + 1);
     }
@@ -100,18 +104,28 @@ export default function StoryFeed() {
     setInfoModalVisible(true);
   };
 
-  const handleGameComplete = (earnedXP: number) => {
-    setUserProgress(prev => ({
-      ...prev,
-      xp: prev.xp + earnedXP,
-      completedGames: [...prev.completedGames, currentGame?.id || '']
-    }));
+  const handleGameComplete = async (earnedXP: number) => {
+    if (currentGame) {
+      if (isSignedIn) {
+        try {
+          await completeGame(currentGame.id, earnedXP);
+        } catch (error) {
+          console.error('Error saving game completion:', error);
+        }
+      }
+    }
     setGameModalVisible(false);
     setCurrentGame(null);
   };
 
-  const handleThoughtUpdate = (newThought: string) => {
-    setUserProgress(prev => ({ ...prev, currentThought: newThought }));
+  const handleThoughtUpdate = async (newThought: string) => {
+    if (isSignedIn) {
+      try {
+        await updateThought(newThought);
+      } catch (error) {
+        console.error('Error updating thought:', error);
+      }
+    }
     
     // Generate new story content starting from next screen
     const newStories = generateNextStory(newThought, currentIndex);
@@ -123,7 +137,7 @@ export default function StoryFeed() {
   };
 
   const currentStory = storySegments[currentIndex];
-  const isCompleted = userProgress.completedGames.includes(currentStory?.id);
+  const isCompleted = completedGames.includes(currentStory?.id);
 
   if (!currentStory) {
     return null;
@@ -132,7 +146,7 @@ export default function StoryFeed() {
   return (
     <View style={styles.container}>
       <XPTracker 
-        xp={userProgress.xp} 
+        xp={currentXP} 
         currentStoryTitle={currentStory.title}
         onThoughtPress={() => setThoughtModalVisible(true)}
       />
@@ -150,7 +164,7 @@ export default function StoryFeed() {
 
       <ThoughtModal
         visible={thoughtModalVisible}
-        currentThought={userProgress.currentThought}
+        currentThought={currentThought}
         onClose={() => setThoughtModalVisible(false)}
         onUpdate={handleThoughtUpdate}
       />

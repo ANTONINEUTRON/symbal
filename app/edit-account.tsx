@@ -25,14 +25,14 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function EditAccountScreen() {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    full_name: user?.full_name || '',
     email: user?.email || '',
     currentPassword: '',
     newPassword: '',
@@ -45,8 +45,8 @@ export default function EditAccountScreen() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+    if (!formData.full_name.trim()) {
+      newErrors.full_name = 'Name is required';
     }
 
     if (!formData.email.trim()) {
@@ -80,8 +80,17 @@ export default function EditAccountScreen() {
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Update profile information
+      await updateProfile({
+        full_name: formData.full_name,
+        email: formData.email,
+      });
+
+      // TODO: Handle password change with Supabase auth
+      if (isChangingPassword) {
+        // This would require Supabase auth password update
+        // await supabase.auth.updateUser({ password: formData.newPassword });
+      }
       
       Alert.alert(
         'Success',
@@ -114,6 +123,11 @@ export default function EditAccountScreen() {
       ]
     );
   };
+
+  if (!user) {
+    router.replace('/auth');
+    return null;
+  }
 
   return (
     <LinearGradient
@@ -148,7 +162,7 @@ export default function EditAccountScreen() {
                 style={styles.avatar}
               >
                 <Text style={styles.avatarText}>
-                  {formData.name.charAt(0).toUpperCase() || 'U'}
+                  {formData.full_name.charAt(0).toUpperCase() || 'U'}
                 </Text>
               </LinearGradient>
               <TouchableOpacity 
@@ -167,19 +181,19 @@ export default function EditAccountScreen() {
             
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Full Name</Text>
-              <View style={[styles.inputWrapper, errors.name && styles.inputWrapperError]}>
+              <View style={[styles.inputWrapper, errors.full_name && styles.inputWrapperError]}>
                 <User size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  value={formData.name}
-                  onChangeText={(text) => updateFormData('name', text)}
+                  value={formData.full_name}
+                  onChangeText={(text) => updateFormData('full_name', text)}
                   placeholder="Enter your full name"
                   placeholderTextColor="#6B7280"
                   autoCapitalize="words"
                   editable={!isLoading}
                 />
               </View>
-              {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+              {errors.full_name && <Text style={styles.errorText}>{errors.full_name}</Text>}
             </View>
 
             <View style={styles.inputContainer}>

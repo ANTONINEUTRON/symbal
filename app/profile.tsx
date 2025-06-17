@@ -13,31 +13,36 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Star, Trophy, Target, RotateCcw, ArrowLeft, LogOut, Settings, Bell, Shield, FileText, Trash2, MessageSquare, CreditCard as Edit, Crown, Mic, MicOff, Sparkles, ChevronRight } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, signOut, isLoading } = useAuth();
+  const { progress } = useUserProgress();
   const [activeTab, setActiveTab] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [voiceAssistanceEnabled, setVoiceAssistanceEnabled] = useState(false);
 
+  // Mock achievements data - in a real app, this would come from Supabase
+  const mockAchievements = [
+    { id: '1', name: 'First Steps', description: 'Complete your first story', icon: '🚀', unlockedAt: '2024-12-01', category: 'Story' },
+    { id: '2', name: 'Truth Seeker', description: 'Master the true/false challenges', icon: '🔍', unlockedAt: '2024-12-02', category: 'Game' },
+    { id: '3', name: 'Word Master', description: 'Unscramble 10 words perfectly', icon: '📝', unlockedAt: '2024-12-03', category: 'Game' },
+    { id: '4', name: 'Speed Demon', description: 'Complete a typing race in record time', icon: '⚡', unlockedAt: '2024-12-04', category: 'Game' },
+    { id: '5', name: 'Puzzle Solver', description: 'Solve 5 passage puzzles', icon: '🧩', unlockedAt: '2024-12-05', category: 'Game' },
+    { id: '6', name: 'Explorer', description: 'Discover 10 new story paths', icon: '🗺️', unlockedAt: '2024-12-06', category: 'Story' },
+    { id: '7', name: 'Perfectionist', description: 'Complete 5 games with 100% accuracy', icon: '💯', unlockedAt: '2024-12-07', category: 'Game' },
+    { id: '8', name: 'Storyteller', description: 'Create your first custom experience', icon: '📚', unlockedAt: '2024-12-08', category: 'Creation' }
+  ];
+
   const userStats = {
-    xp: 150,
-    level: 3,
-    gamesCompleted: 12,
-    storiesUnlocked: 8,
+    xp: progress?.xp || 0,
+    level: progress?.level || 1,
+    gamesCompleted: progress?.completed_games?.length || 0,
+    storiesUnlocked: 8, // This could be calculated based on progress
     isPremium: false,
-    achievements: [
-      { id: '1', name: 'First Steps', description: 'Complete your first story', icon: '🚀', unlockedAt: '2024-12-01', category: 'Story' },
-      { id: '2', name: 'Truth Seeker', description: 'Master the true/false challenges', icon: '🔍', unlockedAt: '2024-12-02', category: 'Game' },
-      { id: '3', name: 'Word Master', description: 'Unscramble 10 words perfectly', icon: '📝', unlockedAt: '2024-12-03', category: 'Game' },
-      { id: '4', name: 'Speed Demon', description: 'Complete a typing race in record time', icon: '⚡', unlockedAt: '2024-12-04', category: 'Game' },
-      { id: '5', name: 'Puzzle Solver', description: 'Solve 5 passage puzzles', icon: '🧩', unlockedAt: '2024-12-05', category: 'Game' },
-      { id: '6', name: 'Explorer', description: 'Discover 10 new story paths', icon: '🗺️', unlockedAt: '2024-12-06', category: 'Story' },
-      { id: '7', name: 'Perfectionist', description: 'Complete 5 games with 100% accuracy', icon: '💯', unlockedAt: '2024-12-07', category: 'Game' },
-      { id: '8', name: 'Storyteller', description: 'Create your first custom experience', icon: '📚', unlockedAt: '2024-12-08', category: 'Creation' }
-    ]
+    achievements: mockAchievements
   };
 
   const settingsItems = [
@@ -158,7 +163,7 @@ export default function ProfileScreen() {
             style={styles.avatar}
           >
             <Text style={styles.avatarText}>
-              {user.name.charAt(0).toUpperCase()}
+              {user.full_name.charAt(0).toUpperCase()}
             </Text>
           </LinearGradient>
           {userStats.isPremium && (
@@ -167,7 +172,7 @@ export default function ProfileScreen() {
             </View>
           )}
         </View>
-        <Text style={styles.username}>{user.name}</Text>
+        <Text style={styles.username}>{user.full_name}</Text>
         <Text style={styles.email}>{user.email}</Text>
         <View style={styles.levelContainer}>
           <Text style={styles.level}>Level {userStats.level}</Text>
@@ -247,10 +252,10 @@ export default function ProfileScreen() {
         <View style={styles.progressBar}>
           <LinearGradient
             colors={['#8B5CF6', '#EC4899']}
-            style={[styles.progressFill, { width: '60%' }]}
+            style={[styles.progressFill, { width: `${(userStats.xp % 100)}%` }]}
           />
         </View>
-        <Text style={styles.progressText}>60/100 XP</Text>
+        <Text style={styles.progressText}>{userStats.xp % 100}/100 XP</Text>
       </View>
     </ScrollView>
   );
@@ -328,7 +333,12 @@ export default function ProfileScreen() {
         </View>
         <View style={styles.accountInfo}>
           <Text style={styles.accountLabel}>Member Since</Text>
-          <Text style={styles.accountValue}>December 2024</Text>
+          <Text style={styles.accountValue}>
+            {new Date(user.created_at).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long' 
+            })}
+          </Text>
         </View>
         <View style={styles.accountInfo}>
           <Text style={styles.accountLabel}>Account Type</Text>
