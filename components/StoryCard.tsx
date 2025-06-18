@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, CircleCheck as CheckCircle, ChevronUp, ChevronDown, Info, Gamepad2 } from 'lucide-react-native';
+import { Play, Info, Gamepad2, Gift } from 'lucide-react-native';
 import { StorySegment } from '@/types';
 import { gameContent } from '@/data/storyData';
+import { router } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -21,6 +22,10 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
       'Great job! You\'re building valuable cognitive skills with every game you play.';
   };
 
+  const handleClaimReward = () => {
+    router.push('/claim-reward');
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -32,8 +37,6 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
         colors={['transparent', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
         style={styles.gradient}
       />
-
-
 
       <View style={styles.content}>
         <View style={styles.textContent}>
@@ -60,27 +63,44 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
           </View>
         </View>
 
-        <TouchableOpacity
-          style={[styles.playButton, isCompleted && styles.completedButton]}
-          onPress={isCompleted ? onShowInfo : onPlayGame}
-        >
-          <LinearGradient
-            colors={isCompleted ? ['#10B981', '#059669'] : ['#8B5CF6', '#EC4899']}
-            style={styles.playButtonGradient}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.playButton, isCompleted && styles.completedButton]}
+            onPress={isCompleted ? onShowInfo : onPlayGame}
           >
-            {isCompleted ? (
-              <>
-                <Info size={20} color="white" />
-                <Text style={styles.playButtonText}>View Info</Text>
-              </>
-            ) : (
-              <>
-                <Play size={20} color="white" />
-                <Text style={styles.playButtonText}>Play Game</Text>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={isCompleted ? ['#10B981', '#059669'] : ['#8B5CF6', '#EC4899']}
+              style={styles.playButtonGradient}
+            >
+              {isCompleted ? (
+                <>
+                  <Info size={20} color="white" />
+                  <Text style={styles.playButtonText}>View Info</Text>
+                </>
+              ) : (
+                <>
+                  <Play size={20} color="white" />
+                  <Text style={styles.playButtonText}>Play Game</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {isCompleted && (
+            <TouchableOpacity
+              style={styles.claimButton}
+              onPress={handleClaimReward}
+            >
+              <LinearGradient
+                colors={['#F59E0B', '#EF4444']}
+                style={styles.claimButtonGradient}
+              >
+                <Gift size={20} color="white" />
+                <Text style={styles.claimButtonText}>Claim Reward</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -146,7 +166,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  }, gameTypeRow: {
+  },
+  gameTypeRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -154,17 +175,15 @@ const styles = StyleSheet.create({
     color: '#8B5CF6',
     fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 6, // space between icon and text
-  },
-  gameType: {
-    color: '#8B5CF6',
-    fontSize: 14,
-    fontWeight: 'bold'
+    marginLeft: 6,
   },
   xpReward: {
     color: '#10B981',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  buttonContainer: {
+    gap: 12,
   },
   playButton: {
     borderRadius: 16,
@@ -183,6 +202,23 @@ const styles = StyleSheet.create({
   playButtonText: {
     color: 'white',
     fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  claimButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  claimButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+  },
+  claimButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },

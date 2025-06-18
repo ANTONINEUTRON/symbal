@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Lightbulb, ArrowRight } from 'lucide-react-native';
+import { X, Lightbulb, ArrowRight, Gift } from 'lucide-react-native';
 import { StorySegment } from '@/types';
 import { gameContent } from '@/data/storyData';
+import { router } from 'expo-router';
 import QuizGame from '@/components/games/QuizGame';
 import TrueFalseGame from '@/components/games/TrueFalseGame';
 import WordScrambleGame from '@/components/games/WordScrambleGame';
@@ -31,17 +32,17 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
 
     setPostGameMessage(fact);
     setShowPostGameInfo(true);
-
-    // Hide the post-game info after 3 seconds and complete the game
-    setTimeout(() => {
-      setShowPostGameInfo(false);
-      onComplete(segment.xpReward);
-    }, 3000);
   };
 
   const handleContinue = () => {
     setShowPostGameInfo(false);
     onComplete(segment.xpReward);
+  };
+
+  const handleClaimReward = () => {
+    setShowPostGameInfo(false);
+    onComplete(segment.xpReward);
+    router.push('/claim-reward');
   };
 
   const renderGame = () => {
@@ -107,15 +108,27 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
                       {postGameMessage}
                     </Text>
 
-                    <TouchableOpacity
-                      style={styles.continueButton}
-                      onPress={handleContinue}
-                    >
-                      <View style={styles.continueButtonContent}>
-                        <Text style={styles.continueButtonText}>Continue Journey</Text>
-                        <ArrowRight size={20} color="white" />
-                      </View>
-                    </TouchableOpacity>
+                    <View style={styles.postGameButtons}>
+                      <TouchableOpacity
+                        style={styles.continueButton}
+                        onPress={handleContinue}
+                      >
+                        <View style={styles.continueButtonContent}>
+                          <Text style={styles.continueButtonText}>Continue Journey</Text>
+                          <ArrowRight size={20} color="white" />
+                        </View>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.claimRewardButton}
+                        onPress={handleClaimReward}
+                      >
+                        <View style={styles.claimRewardButtonContent}>
+                          <Gift size={20} color="white" />
+                          <Text style={styles.claimRewardButtonText}>Claim Reward</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </LinearGradient>
               </View>
@@ -200,6 +213,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
+  postGameButtons: {
+    width: '100%',
+    gap: 12,
+  },
   continueButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
@@ -211,9 +228,29 @@ const styles = StyleSheet.create({
   continueButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   continueButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  claimRewardButton: {
+    backgroundColor: 'rgba(245, 158, 11, 0.3)',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.5)',
+  },
+  claimRewardButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  claimRewardButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

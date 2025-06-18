@@ -12,6 +12,7 @@ export default function RootLayout() {
     <AuthProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="index" />
           <Stack.Screen name="profile" />
@@ -20,6 +21,8 @@ export default function RootLayout() {
           <Stack.Screen name="premium" />
           <Stack.Screen name="achievements" />
           <Stack.Screen name="experience-manager" />
+          <Stack.Screen name="rewards" />
+          <Stack.Screen name="claim-reward" />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />
