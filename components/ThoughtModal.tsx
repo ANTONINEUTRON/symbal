@@ -29,64 +29,66 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          <LinearGradient
-            colors={['#1a1a2e', '#16213e']}
-            style={styles.content}
-          >
-            <View style={styles.header}>
-              <Text style={styles.title}>Update Your Thought</Text>
-              <TouchableOpacity onPress={onClose}>
-                <X size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.description}>
-              Your thoughts shape the story. Choose 3 words that will influence what happens next.
-            </Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={thought}
-                onChangeText={handleTextChange}
-                placeholder="Enter your thought..."
-                placeholderTextColor="#9CA3AF"
-                multiline
-                maxLength={50}
-              />
-              <Text style={[
-                styles.wordCount,
-                wordCount > 3 ? styles.wordCountError : wordCount === 3 ? styles.wordCountGood : {}
-              ]}>
-                {wordCount}/3 words
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.submitButton, (!thought.trim() || wordCount === 0) && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={!thought.trim() || wordCount === 0}
+    <View>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={onClose}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.container}>
+            <LinearGradient
+              colors={['#1a1a2e', '#16213e']}
+              style={styles.content}
             >
-              <LinearGradient
-                colors={thought.trim() && wordCount > 0 ? ['#8B5CF6', '#EC4899'] : ['#6B7280', '#4B5563']}
-                style={styles.submitButtonGradient}
+              <View style={styles.header}>
+                <Text style={styles.title}>Update Your Thought</Text>
+                <TouchableOpacity onPress={onClose}>
+                  <X size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.description}>
+                Your thoughts shape the story. Choose 3 words that will influence what happens next.
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={thought}
+                  onChangeText={handleTextChange}
+                  placeholder="Enter your thought..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  maxLength={50}
+                />
+                <Text style={[
+                  styles.wordCount,
+                  wordCount > 3 ? styles.wordCountError : wordCount === 3 ? styles.wordCountGood : {}
+                ]}>
+                  {wordCount}/3 words
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.submitButton, (!thought.trim() || wordCount === 0) && styles.submitButtonDisabled]}
+                onPress={handleSubmit}
+                disabled={!thought.trim() || wordCount === 0}
               >
-                <Send size={20} color="white" />
-                <Text style={styles.submitButtonText}>Update Story</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </LinearGradient>
+                <LinearGradient
+                  colors={thought.trim() && wordCount > 0 ? ['#8B5CF6', '#EC4899'] : ['#6B7280', '#4B5563']}
+                  style={styles.submitButtonGradient}
+                >
+                  <Send size={20} color="white" />
+                  <Text style={styles.submitButtonText}>Update Story</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </LinearGradient>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </View>
   );
 }
 

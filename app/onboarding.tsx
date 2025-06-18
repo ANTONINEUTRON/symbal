@@ -41,7 +41,7 @@ export default function OnboardingScreen() {
 
         <TouchableOpacity
           style={styles.startButton}
-          onPress={() => router.replace('/(tabs)')}
+          onPress={() => router.replace('/')}
         >
           <LinearGradient
             colors={['#8B5CF6', '#EC4899']}

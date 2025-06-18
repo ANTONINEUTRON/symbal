@@ -25,13 +25,13 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
 
   const handleGameComplete = () => {
     // Get the post-game fact
-    const fact = segment.postGameFact || 
-                 gameContent.postGameFacts?.[segment.gameType] || 
-                 '🎉 Great job! You\'re building valuable cognitive skills with every game you play.';
-    
+    const fact = segment.postGameFact ||
+      gameContent.postGameFacts?.[segment.gameType] ||
+      '🎉 Great job! You\'re building valuable cognitive skills with every game you play.';
+
     setPostGameMessage(fact);
     setShowPostGameInfo(true);
-    
+
     // Hide the post-game info after 3 seconds and complete the game
     setTimeout(() => {
       setShowPostGameInfo(false);
@@ -68,60 +68,62 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-    >
-      <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
-        style={styles.container}
+    <View>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="fullScreen"
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>{segment.title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="white" />
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.gameContainer}>
-          {renderGame()}
-        </View>
-
-        {/* Post-Game Information Overlay */}
-        {showPostGameInfo && (
-          <View style={styles.postGameOverlay}>
-            <View style={styles.postGameContainer}>
-              <LinearGradient
-                colors={['#8B5CF6', '#EC4899', '#F59E0B']}
-                style={styles.postGameGradient}
-              >
-                <View style={styles.postGameContent}>
-                  <View style={styles.postGameHeader}>
-                    <Lightbulb size={32} color="white" />
-                    <Text style={styles.postGameTitle}>Did You Know?</Text>
-                  </View>
-                  
-                  <Text style={styles.postGameText}>
-                    {postGameMessage}
-                  </Text>
-                  
-                  <TouchableOpacity 
-                    style={styles.continueButton}
-                    onPress={handleContinue}
-                  >
-                    <View style={styles.continueButtonContent}>
-                      <Text style={styles.continueButtonText}>Continue Journey</Text>
-                      <ArrowRight size={20} color="white" />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              </LinearGradient>
-            </View>
+        <LinearGradient
+          colors={['#1a1a2e', '#16213e', '#0f3460']}
+          style={styles.container}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>{segment.title}</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <X size={24} color="white" />
+            </TouchableOpacity>
           </View>
-        )}
-      </LinearGradient>
-    </Modal>
+
+          <View style={styles.gameContainer}>
+            {renderGame()}
+          </View>
+
+          {/* Post-Game Information Overlay */}
+          {showPostGameInfo && (
+            <View style={styles.postGameOverlay}>
+              <View style={styles.postGameContainer}>
+                <LinearGradient
+                  colors={['#8B5CF6', '#EC4899', '#F59E0B']}
+                  style={styles.postGameGradient}
+                >
+                  <View style={styles.postGameContent}>
+                    <View style={styles.postGameHeader}>
+                      <Lightbulb size={32} color="white" />
+                      <Text style={styles.postGameTitle}>Did You Know?</Text>
+                    </View>
+
+                    <Text style={styles.postGameText}>
+                      {postGameMessage}
+                    </Text>
+
+                    <TouchableOpacity
+                      style={styles.continueButton}
+                      onPress={handleContinue}
+                    >
+                      <View style={styles.continueButtonContent}>
+                        <Text style={styles.continueButtonText}>Continue Journey</Text>
+                        <ArrowRight size={20} color="white" />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </View>
+            </View>
+          )}
+        </LinearGradient>
+      </Modal>
+    </View>
   );
 }
 
