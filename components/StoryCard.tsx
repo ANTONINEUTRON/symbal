@@ -5,6 +5,7 @@ import { Play, Info, Gamepad2, Gift } from 'lucide-react-native';
 import { StorySegment } from '@/types';
 import { gameContent } from '@/data/storyData';
 import { router } from 'expo-router';
+import AIStoryIndicator from './AIStoryIndicator';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -26,6 +27,9 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
     router.push('/claim-reward');
   };
 
+  // Check if this is an AI-generated story
+  const isAIGenerated = segment.id.startsWith('ai-');
+
   return (
     <View style={styles.container}>
       <Image
@@ -37,6 +41,9 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
         colors={['transparent', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
         style={styles.gradient}
       />
+
+      {/* AI Story Indicator */}
+      <AIStoryIndicator isAIGenerated={isAIGenerated} />
 
       <View style={styles.content}>
         <View style={styles.textContent}>

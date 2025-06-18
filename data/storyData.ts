@@ -1,4 +1,5 @@
 import { StorySegment, GameContent } from '@/types';
+import { generateStoryWithAI, generateMultipleStories, getRandomPexelsImage, StoryGenerationContext } from '@/lib/gemini';
 
 export const initialStorySegments: StorySegment[] = [
   {
@@ -107,7 +108,90 @@ export const gameContent: GameContent = {
   }
 };
 
-export const generateNextStory = (thought: string, currentIndex: number): StorySegment[] => {
+export const generateNextStory = async (
+  thought: string, 
+  currentIndex: number,
+  userExperiences?: any[],
+  userLevel?: number,
+  completedGames?: string[]
+): Promise<StorySegment[]> => {
+  try {
+    // Build context for AI generation
+    const context: StoryGenerationContext = {
+      currentThought: thought,
+      userExperiences: userExperiences?.map(exp => ({
+        title: exp.title,
+        description: exp.description,
+        content: exp.content
+      })),
+      userLevel,
+      completedGames
+    };
+
+    // Generate AI-powered story
+    const generatedStory = await generateStoryWithAI(context);
+    
+    const newStory: StorySegment = {
+      id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: generatedStory.title,
+      text: generatedStory.text,
+      gameType: generatedStory.gameType,
+      imageUrl: getRandomPexelsImage(),
+      xpReward: generatedStory.xpReward,
+      postGameFact: generatedStory.postGameFact
+    };
+
+    return [newStory];
+
+  } catch (error) {
+    console.error('Error generating AI story:', error);
+    
+    // Fallback to original logic if AI fails
+    return generateFallbackStory(thought, currentIndex);
+  }
+};
+
+// Enhanced story generation with multiple stories
+export const generateMultipleNextStories = async (
+  thought: string,
+  currentIndex: number,
+  userExperiences?: any[],
+  userLevel?: number,
+  completedGames?: string[],
+  count: number = 3
+): Promise<StorySegment[]> => {
+  try {
+    const context: StoryGenerationContext = {
+      currentThought: thought,
+      userExperiences: userExperiences?.map(exp => ({
+        title: exp.title,
+        description: exp.description,
+        content: exp.content
+      })),
+      userLevel,
+      completedGames
+    };
+
+    const generatedStories = await generateMultipleStories(context, count);
+    
+    return generatedStories.map((story, index) => ({
+      id: `ai-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`,
+      title: story.title,
+      text: story.text,
+      gameType: story.gameType,
+      imageUrl: getRandomPexelsImage(),
+      xpReward: story.xpReward,
+      postGameFact: story.postGameFact
+    }));
+
+  } catch (error) {
+    console.error('Error generating multiple AI stories:', error);
+    return generateFallbackStory(thought, currentIndex);
+  }
+};
+
+// Fallback story generation (original logic)
+function generateFallbackStory(thought: string, currentIndex: number): StorySegment[] {
   const thoughtWords = thought.toLowerCase().split(' ').filter(word => word.length > 0);
   
   const themes: Record<string, StorySegment[]> = {
@@ -143,6 +227,17 @@ export const generateNextStory = (thought: string, currentIndex: number): StoryS
         xpReward: 25,
         postGameFact: '❤️ Acts of love and kindness release oxytocin, which reduces stress and promotes healing. Spread the love!'
       }
+    ],
+    adventure: [
+      {
+        id: `adventure-${Date.now()}`,
+        title: 'The Quest Begins',
+        text: `Your thought of "${thought}" sparks an epic journey into the unknown.`,
+        gameType: 'word-scramble',
+        imageUrl: 'https://images.pexels.com/photos/1181723/pexels-photo-1181723.jpeg',
+        xpReward: 22,
+        postGameFact: '🗺️ Adventure activities boost creativity by 50%. Embrace the unknown!'
+      }
     ]
   };
 
@@ -160,9 +255,9 @@ export const generateNextStory = (thought: string, currentIndex: number): StoryS
       title: 'The Unexpected Path',
       text: `Your thought of "${thought}" creates ripples in the fabric of reality. New challenges emerge.`,
       gameType: ['quiz', 'word-scramble', 'matching'][Math.floor(Math.random() * 3)] as any,
-      imageUrl: 'https://images.pexels.com/photos/1181723/pexels-photo-1181723.jpeg',
+      imageUrl: getRandomPexelsImage(),
       xpReward: 18,
       postGameFact: '🌊 Embracing uncertainty leads to personal growth. Every unexpected path teaches valuable lessons!'
     }
   ];
-};
+}
