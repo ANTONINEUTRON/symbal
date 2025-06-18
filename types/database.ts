@@ -69,12 +69,13 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          difficulty: 'Easy' | 'Medium' | 'Hard';
-          estimated_time: string;
           is_public: boolean;
           plays: number;
           rating: number;
           content: any; // JSON content for the experience
+          reward_type: 'none' | 'regular' | 'text_input' | 'image_upload';
+          reward_count: number;
+          reward_instructions?: string;
           created_at: string;
           updated_at: string;
         };
@@ -83,12 +84,13 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          difficulty?: 'Easy' | 'Medium' | 'Hard';
-          estimated_time?: string;
           is_public?: boolean;
           plays?: number;
           rating?: number;
           content?: any;
+          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload';
+          reward_count?: number;
+          reward_instructions?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -97,12 +99,13 @@ export interface Database {
           user_id?: string;
           title?: string;
           description?: string;
-          difficulty?: 'Easy' | 'Medium' | 'Hard';
-          estimated_time?: string;
           is_public?: boolean;
           plays?: number;
           rating?: number;
           content?: any;
+          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload';
+          reward_count?: number;
+          reward_instructions?: string;
           updated_at?: string;
         };
       };
@@ -115,6 +118,7 @@ export interface Database {
     };
     Enums: {
       difficulty_level: 'Easy' | 'Medium' | 'Hard';
+      reward_type: 'none' | 'regular' | 'text_input' | 'image_upload';
     };
   };
 }
