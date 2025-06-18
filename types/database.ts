@@ -114,7 +114,7 @@ export interface Database {
       [_ in never]: never;
     };
     Enums: {
-      [_ in never]: never;
+      difficulty_level: 'Easy' | 'Medium' | 'Hard';
     };
   };
 }

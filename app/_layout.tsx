@@ -16,6 +16,10 @@ export default function RootLayout() {
           <Stack.Screen name="index" />
           <Stack.Screen name="profile" />
           <Stack.Screen name="auth" />
+          <Stack.Screen name="edit-account" />
+          <Stack.Screen name="premium" />
+          <Stack.Screen name="achievements" />
+          <Stack.Screen name="experience-manager" />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="light" />
