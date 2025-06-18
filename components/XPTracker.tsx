@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, CreditCard as Edit3, User } from 'lucide-react-native';
+import { Star, Edit3, User } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 interface XPTrackerProps {
   xp: number;
@@ -13,6 +14,7 @@ interface XPTrackerProps {
 
 export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
   const { isSignedIn } = useAuth();
+  const { progress } = useUserProgress();
 
   const handleProfilePress = () => {
     if (isSignedIn) {
@@ -22,6 +24,9 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
     }
   };
 
+  // Get current thought from database or use default
+  const currentThought = isSignedIn ? (progress?.current_thought || 'adventure begins now') : 'adventure begins now';
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -29,14 +34,23 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
           <Edit3 size={16} color="white" />
         </TouchableOpacity>
         
-        <View style={styles.symSection}>
-          <LinearGradient
-            colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
-            style={styles.symChip}
-          >
-            <Star size={16} color="#F59E0B" />
-            <Text style={styles.symText}>{xp} SYM</Text>
-          </LinearGradient>
+        <View style={styles.centerSection}>
+          <View style={styles.symSection}>
+            <LinearGradient
+              colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
+              style={styles.symChip}
+            >
+              <Star size={16} color="#F59E0B" />
+              <Text style={styles.symText}>{xp} SYM</Text>
+            </LinearGradient>
+          </View>
+          
+          {/* Current Thought Display */}
+          <TouchableOpacity style={styles.thoughtDisplay} onPress={onThoughtPress}>
+            <Text style={styles.thoughtText} numberOfLines={1} ellipsizeMode="tail">
+              "{currentThought}"
+            </Text>
+          </TouchableOpacity>
         </View>
         
         <TouchableOpacity 
@@ -77,10 +91,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  symSection: {
+  centerSection: {
     flex: 1,
     marginHorizontal: 16,
     alignItems: 'center',
+  },
+  symSection: {
+    marginBottom: 8,
   },
   symChip: {
     flexDirection: 'row',
@@ -102,6 +119,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 6,
+  },
+  thoughtDisplay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    maxWidth: 200,
+  },
+  thoughtText: {
+    color: 'white',
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   profileButton: {
     borderRadius: 20,

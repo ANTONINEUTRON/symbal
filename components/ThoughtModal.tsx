@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Send } from 'lucide-react-native';
+import { X, Send, Lightbulb } from 'lucide-react-native';
 
 interface ThoughtModalProps {
   visible: boolean;
@@ -12,7 +12,14 @@ interface ThoughtModalProps {
 
 export default function ThoughtModal({ visible, currentThought, onClose, onUpdate }: ThoughtModalProps) {
   const [thought, setThought] = useState(currentThought);
-  const [wordCount, setWordCount] = useState(currentThought.split(' ').filter(w => w.length > 0).length);
+  const [wordCount, setWordCount] = useState(0);
+
+  // Update local state when currentThought prop changes
+  useEffect(() => {
+    setThought(currentThought);
+    const words = currentThought.split(' ').filter(word => word.length > 0);
+    setWordCount(words.length);
+  }, [currentThought]);
 
   const handleTextChange = (text: string) => {
     const words = text.split(' ').filter(word => word.length > 0);
@@ -28,13 +35,21 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
     }
   };
 
+  const handleClose = () => {
+    // Reset to current thought when closing without saving
+    setThought(currentThought);
+    const words = currentThought.split(' ').filter(word => word.length > 0);
+    setWordCount(words.length);
+    onClose();
+  };
+
   return (
     <View>
       <Modal
         visible={visible}
         transparent
         animationType="fade"
-        onRequestClose={onClose}
+        onRequestClose={handleClose}
       >
         <View style={styles.overlay}>
           <View style={styles.container}>
@@ -43,25 +58,34 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
               style={styles.content}
             >
               <View style={styles.header}>
-                <Text style={styles.title}>Update Your Thought</Text>
-                <TouchableOpacity onPress={onClose}>
+                <View style={styles.headerLeft}>
+                  <Lightbulb size={24} color="#8B5CF6" />
+                  <Text style={styles.title}>Update Your Thought</Text>
+                </View>
+                <TouchableOpacity onPress={handleClose}>
                   <X size={24} color="white" />
                 </TouchableOpacity>
               </View>
 
               <Text style={styles.description}>
-                Your thoughts shape the story. Choose 3 words that will influence what happens next.
+                Your thoughts shape the story. Choose up to 3 words that will influence what happens next.
               </Text>
+
+              <View style={styles.currentThoughtContainer}>
+                <Text style={styles.currentThoughtLabel}>Current thought:</Text>
+                <Text style={styles.currentThoughtText}>"{currentThought}"</Text>
+              </View>
 
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
                   value={thought}
                   onChangeText={handleTextChange}
-                  placeholder="Enter your thought..."
+                  placeholder="Enter your new thought..."
                   placeholderTextColor="#9CA3AF"
                   multiline
                   maxLength={50}
+                  autoFocus
                 />
                 <Text style={[
                   styles.wordCount,
@@ -71,13 +95,44 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
                 </Text>
               </View>
 
+              <View style={styles.exampleContainer}>
+                <Text style={styles.exampleLabel}>Examples:</Text>
+                <View style={styles.exampleTags}>
+                  <TouchableOpacity 
+                    style={styles.exampleTag}
+                    onPress={() => handleTextChange('hope courage light')}
+                  >
+                    <Text style={styles.exampleTagText}>hope courage light</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.exampleTag}
+                    onPress={() => handleTextChange('mystery dark secrets')}
+                  >
+                    <Text style={styles.exampleTagText}>mystery dark secrets</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.exampleTag}
+                    onPress={() => handleTextChange('adventure awaits now')}
+                  >
+                    <Text style={styles.exampleTagText}>adventure awaits now</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               <TouchableOpacity
-                style={[styles.submitButton, (!thought.trim() || wordCount === 0) && styles.submitButtonDisabled]}
+                style={[
+                  styles.submitButton, 
+                  (!thought.trim() || wordCount === 0 || thought === currentThought) && styles.submitButtonDisabled
+                ]}
                 onPress={handleSubmit}
-                disabled={!thought.trim() || wordCount === 0}
+                disabled={!thought.trim() || wordCount === 0 || thought === currentThought}
               >
                 <LinearGradient
-                  colors={thought.trim() && wordCount > 0 ? ['#8B5CF6', '#EC4899'] : ['#6B7280', '#4B5563']}
+                  colors={
+                    thought.trim() && wordCount > 0 && thought !== currentThought 
+                      ? ['#8B5CF6', '#EC4899'] 
+                      : ['#6B7280', '#4B5563']
+                  }
                   style={styles.submitButtonGradient}
                 >
                   <Send size={20} color="white" />
@@ -115,19 +170,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   title: {
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
+    marginLeft: 12,
   },
   description: {
     color: '#E5E7EB',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  currentThoughtContainer: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B5CF6',
+  },
+  currentThoughtLabel: {
+    color: '#8B5CF6',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  currentThoughtText: {
+    color: 'white',
+    fontSize: 16,
+    fontStyle: 'italic',
   },
   inputContainer: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   input: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -149,6 +229,30 @@ const styles = StyleSheet.create({
   },
   wordCountGood: {
     color: '#10B981',
+  },
+  exampleContainer: {
+    marginBottom: 24,
+  },
+  exampleLabel: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  exampleTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  exampleTag: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  exampleTagText: {
+    color: '#8B5CF6',
+    fontSize: 12,
+    fontWeight: '600',
   },
   submitButton: {
     borderRadius: 12,
