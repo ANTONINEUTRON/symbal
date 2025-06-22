@@ -33,9 +33,10 @@ export interface Database {
           xp: number;
           level: number;
           current_story_index: number;
-          current_thought: string;
+          mood: string;
           completed_games: string[];
           achievements: string[];
+          last_task_types: string[];
           created_at: string;
           updated_at: string;
         };
@@ -45,9 +46,10 @@ export interface Database {
           xp?: number;
           level?: number;
           current_story_index?: number;
-          current_thought?: string;
+          mood?: string;
           completed_games?: string[];
           achievements?: string[];
+          last_task_types?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -57,9 +59,10 @@ export interface Database {
           xp?: number;
           level?: number;
           current_story_index?: number;
-          current_thought?: string;
+          mood?: string;
           completed_games?: string[];
           achievements?: string[];
+          last_task_types?: string[];
           updated_at?: string;
         };
       };
@@ -72,8 +75,8 @@ export interface Database {
           is_public: boolean;
           plays: number;
           rating: number;
-          content: any; // JSON content for the experience
-          reward_type: 'none' | 'regular' | 'text_input' | 'image_upload';
+          content: any;
+          reward_type: 'none' | 'regular' | 'text_input' | 'image_upload' | 'drawing' | 'writing';
           reward_count: number;
           reward_instructions?: string;
           created_at: string;
@@ -88,7 +91,7 @@ export interface Database {
           plays?: number;
           rating?: number;
           content?: any;
-          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload';
+          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload' | 'drawing' | 'writing';
           reward_count?: number;
           reward_instructions?: string;
           created_at?: string;
@@ -103,7 +106,7 @@ export interface Database {
           plays?: number;
           rating?: number;
           content?: any;
-          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload';
+          reward_type?: 'none' | 'regular' | 'text_input' | 'image_upload' | 'drawing' | 'writing';
           reward_count?: number;
           reward_instructions?: string;
           updated_at?: string;
@@ -118,7 +121,7 @@ export interface Database {
     };
     Enums: {
       difficulty_level: 'Easy' | 'Medium' | 'Hard';
-      reward_type: 'none' | 'regular' | 'text_input' | 'image_upload';
+      reward_type: 'none' | 'regular' | 'text_input' | 'image_upload' | 'drawing' | 'writing';
     };
   };
 }

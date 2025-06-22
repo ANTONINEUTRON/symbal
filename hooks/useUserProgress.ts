@@ -38,9 +38,10 @@ export function useUserProgress() {
           xp: 0,
           level: 1,
           current_story_index: 0,
-          current_thought: 'adventure begins now',
+          mood: 'creative inspiration',
           completed_games: [],
           achievements: [],
+          last_task_types: [],
         };
 
         const { data: createdProgress, error: createError } = await supabase
@@ -95,12 +96,21 @@ export function useUserProgress() {
     });
   };
 
-  const completeGame = async (gameId: string, xpReward: number) => {
+  const completeGame = async (gameId: string, xpReward: number, gameType?: string) => {
     if (!progress) return;
 
     const updatedCompletedGames = [...progress.completed_games];
     if (!updatedCompletedGames.includes(gameId)) {
       updatedCompletedGames.push(gameId);
+    }
+
+    // Update last task types to prevent repetition (keep last 5)
+    let updatedLastTaskTypes = [...progress.last_task_types];
+    if (gameType) {
+      updatedLastTaskTypes.push(gameType);
+      if (updatedLastTaskTypes.length > 5) {
+        updatedLastTaskTypes = updatedLastTaskTypes.slice(-5);
+      }
     }
 
     const newXP = progress.xp + xpReward;
@@ -110,12 +120,13 @@ export function useUserProgress() {
       xp: newXP,
       level: newLevel,
       completed_games: updatedCompletedGames,
+      last_task_types: updatedLastTaskTypes,
     });
   };
 
-  const updateThought = async (newThought: string) => {
+  const updateMood = async (newMood: string) => {
     return updateProgress({
-      current_thought: newThought,
+      mood: newMood,
     });
   };
 
@@ -138,7 +149,7 @@ export function useUserProgress() {
     updateProgress,
     addXP,
     completeGame,
-    updateThought,
+    updateMood,
     addAchievement,
     refetch: fetchProgress,
   };

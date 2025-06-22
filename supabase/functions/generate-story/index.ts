@@ -8,7 +8,7 @@ const corsHeaders = {
 }
 
 interface StoryGenerationContext {
-  currentThought: string;
+  mood: string;
   userExperiences?: Array<{
     title: string;
     description: string;
@@ -16,6 +16,7 @@ interface StoryGenerationContext {
   }>;
   userLevel?: number;
   completedGames?: string[];
+  lastTaskTypes?: string[];
   count?: number;
 }
 
@@ -25,16 +26,14 @@ interface GeneratedStory {
   gameType: string;
   xpReward: number;
   postGameFact: string;
+  drawingPrompt?: string;
+  writingPrompt?: string;
+  wordLimit?: number;
+  colorPalette?: string[];
+  timeLimit?: number;
 }
 
-const GAME_TYPES = [
-  'quiz',
-  'true-false',
-  'word-scramble',
-  'matching',
-  'passage-puzzle',
-  'typing-race'
-];
+const GAME_TYPES = ['drawing', 'writing'];
 
 const PEXELS_IMAGES = [
   'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
@@ -49,12 +48,27 @@ const PEXELS_IMAGES = [
   'https://images.pexels.com/photos/1181319/pexels-photo-1181319.jpeg'
 ];
 
-function getRandomGameType(): string {
-  return GAME_TYPES[Math.floor(Math.random() * GAME_TYPES.length)];
+const COLOR_PALETTES = [
+  ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+  ['#FF9F43', '#10AC84', '#5F27CD', '#00D2D3', '#FF3838', '#FF9FF3'],
+  ['#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43', '#10AC84', '#FF3838'],
+  ['#A55EEA', '#26DE81', '#FD79A8', '#FDCB6E', '#6C5CE7', '#74B9FF'],
+  ['#FF7675', '#74B9FF', '#A29BFE', '#FD79A8', '#FDCB6E', '#00B894']
+];
+
+function getRandomGameType(excludeTypes: string[] = []): string {
+  const availableTypes = GAME_TYPES.filter(type => !excludeTypes.includes(type));
+  return availableTypes.length > 0 
+    ? availableTypes[Math.floor(Math.random() * availableTypes.length)]
+    : GAME_TYPES[Math.floor(Math.random() * GAME_TYPES.length)];
 }
 
 function getRandomPexelsImage(): string {
   return PEXELS_IMAGES[Math.floor(Math.random() * PEXELS_IMAGES.length)];
+}
+
+function getRandomColorPalette(): string[] {
+  return COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
 }
 
 async function generateStoryWithAI(context: StoryGenerationContext): Promise<GeneratedStory> {
@@ -72,34 +86,65 @@ async function generateStoryWithAI(context: StoryGenerationContext): Promise<Gen
       ? `User's custom experiences: ${context.userExperiences.map(exp => `"${exp.title}": ${exp.description}`).join(', ')}`
       : '';
 
-    const prompt = `
-You are a creative storytelling AI for an interactive story app called Symbal. Generate a compelling story segment based on the user's current thought and context.
+    const lastTaskTypesContext = context.lastTaskTypes?.length
+      ? `Recent task types to avoid: ${context.lastTaskTypes.join(', ')}`
+      : '';
 
-Current user thought: "${context.currentThought}"
+    const prompt = `
+You are a creative AI for an interactive story app called Symbal. Generate a compelling creative task based on the user's current mood and context.
+
+Current user mood: "${context.mood}"
 User level: ${context.userLevel || 1}
 ${experiencesContext}
+${lastTaskTypesContext}
 
 Requirements:
 1. Create an engaging story title (max 6 words)
 2. Write a captivating story description (2-3 sentences, max 150 characters)
-3. Choose an appropriate game type from: ${GAME_TYPES.join(', ')}
-4. Suggest XP reward (10-50 based on complexity)
-5. Create an educational post-game fact related to the story theme
+3. Choose a task type: either "drawing" or "writing" (avoid recent types if provided)
+4. Suggest XP reward (20-50 based on complexity)
+5. Create an educational post-game fact related to creativity
 
-The story should:
-- Be inspired by the user's thought: "${context.currentThought}"
+For DRAWING tasks, provide:
+- drawingPrompt: Clear, inspiring drawing instruction
+- colorPalette: Array of 6 hex colors
+- timeLimit: 10-20 minutes
+
+For WRITING tasks, provide:
+- writingPrompt: Creative writing instruction
+- wordLimit: 50-200 words
+- timeLimit: 10-15 minutes
+
+The task should:
+- Be inspired by the user's mood: "${context.mood}"
 - Be appropriate for all ages
-- Encourage learning and growth
-- Connect to the user's experiences if provided
-- Be unique and creative
+- Encourage creativity and self-expression
+- Be achievable within the time limit
+- Be unique and engaging
 
 Respond in this exact JSON format:
 {
-  "title": "Story Title Here",
-  "text": "Story description here that connects to the user's thought and creates intrigue.",
-  "gameType": "quiz",
+  "title": "Creative Task Title",
+  "text": "Story description that connects to the user's mood and introduces the creative challenge.",
+  "gameType": "drawing",
+  "xpReward": 30,
+  "postGameFact": "🎨 Educational fact about creativity, art, or self-expression.",
+  "drawingPrompt": "Draw something specific and inspiring...",
+  "colorPalette": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"],
+  "timeLimit": 15
+}
+
+OR for writing tasks:
+
+{
+  "title": "Creative Writing Challenge",
+  "text": "Story description that connects to the user's mood and introduces the writing challenge.",
+  "gameType": "writing",
   "xpReward": 25,
-  "postGameFact": "🧠 Educational fact related to the story theme that teaches something valuable."
+  "postGameFact": "✍️ Educational fact about writing, storytelling, or creativity.",
+  "writingPrompt": "Write about something specific and meaningful...",
+  "wordLimit": 100,
+  "timeLimit": 12
 }
 `;
 
@@ -117,12 +162,24 @@ Respond in this exact JSON format:
 
     // Validate and sanitize the response
     const story: GeneratedStory = {
-      title: generatedStory.title?.substring(0, 50) || 'The Unexpected Journey',
-      text: generatedStory.text?.substring(0, 200) || `Your thought of "${context.currentThought}" opens new possibilities.`,
-      gameType: GAME_TYPES.includes(generatedStory.gameType) ? generatedStory.gameType : getRandomGameType(),
-      xpReward: Math.max(10, Math.min(50, generatedStory.xpReward || 20)),
-      postGameFact: generatedStory.postGameFact?.substring(0, 300) || '🌟 Every challenge you overcome makes you stronger and more resilient!'
+      title: generatedStory.title?.substring(0, 50) || 'Creative Challenge',
+      text: generatedStory.text?.substring(0, 200) || `Your mood of "${context.mood}" inspires a creative task.`,
+      gameType: GAME_TYPES.includes(generatedStory.gameType) ? generatedStory.gameType : getRandomGameType(context.lastTaskTypes),
+      xpReward: Math.max(20, Math.min(50, generatedStory.xpReward || 30)),
+      postGameFact: generatedStory.postGameFact?.substring(0, 300) || '🎨 Creative expression enhances mental well-being and cognitive flexibility!',
+      timeLimit: Math.max(5, Math.min(30, generatedStory.timeLimit || 15))
     };
+
+    // Add task-specific properties
+    if (story.gameType === 'drawing') {
+      story.drawingPrompt = generatedStory.drawingPrompt?.substring(0, 200) || `Draw something inspired by "${context.mood}"`;
+      story.colorPalette = Array.isArray(generatedStory.colorPalette) && generatedStory.colorPalette.length === 6
+        ? generatedStory.colorPalette
+        : getRandomColorPalette();
+    } else if (story.gameType === 'writing') {
+      story.writingPrompt = generatedStory.writingPrompt?.substring(0, 200) || `Write about "${context.mood}" and what it means to you`;
+      story.wordLimit = Math.max(30, Math.min(300, generatedStory.wordLimit || 100));
+    }
 
     return story;
 
@@ -133,47 +190,64 @@ Respond in this exact JSON format:
 }
 
 function generateFallbackStory(context: StoryGenerationContext): GeneratedStory {
-  const thoughtWords = context.currentThought.toLowerCase().split(' ');
+  const moodWords = context.mood.toLowerCase().split(' ');
   
   const themes = {
     hope: {
-      title: 'The Light Bearer',
-      text: `Your thought of "${context.currentThought}" illuminates a path forward.`,
-      fact: '🌟 Optimistic thinking can increase lifespan by 11-15%. Your positive mindset is literally life-changing!'
+      title: 'Light & Inspiration',
+      text: `Your mood of "${context.mood}" sparks a creative challenge.`,
+      fact: '🌟 Creative expression can boost mood and reduce stress by up to 45%!'
     },
     adventure: {
-      title: 'The Quest Begins',
-      text: `Your thought of "${context.currentThought}" sparks an epic journey.`,
-      fact: '🗺️ Adventure activities boost creativity by 50%. Embrace the unknown!'
+      title: 'Epic Journey',
+      text: `Your mood of "${context.mood}" calls for an adventurous creation.`,
+      fact: '🗺️ Adventure-themed creativity enhances problem-solving skills!'
     },
     mystery: {
-      title: 'Secrets Unveiled',
-      text: `Your thought of "${context.currentThought}" reveals hidden mysteries.`,
-      fact: '🔍 Curiosity activates the brain\'s reward system, making learning more enjoyable!'
+      title: 'Hidden Secrets',
+      text: `Your mood of "${context.mood}" unveils mysterious creative possibilities.`,
+      fact: '🔍 Mystery-based tasks improve analytical thinking and imagination!'
     },
     courage: {
-      title: 'Brave New World',
-      text: `Your thought of "${context.currentThought}" demands courage to proceed.`,
-      fact: '💪 Facing fears actually rewires your brain to be more resilient!'
+      title: 'Brave Expression',
+      text: `Your mood of "${context.mood}" demands bold creative expression.`,
+      fact: '💪 Creative courage builds confidence in all areas of life!'
     }
   };
 
   // Find matching theme or use default
   let selectedTheme = themes.adventure;
-  for (const word of thoughtWords) {
+  for (const word of moodWords) {
     if (themes[word as keyof typeof themes]) {
       selectedTheme = themes[word as keyof typeof themes];
       break;
     }
   }
 
-  return {
+  const gameType = getRandomGameType(context.lastTaskTypes);
+
+  const baseStory = {
     title: selectedTheme.title,
     text: selectedTheme.text,
-    gameType: getRandomGameType(),
-    xpReward: Math.floor(Math.random() * 30) + 15,
-    postGameFact: selectedTheme.fact
+    gameType,
+    xpReward: Math.floor(Math.random() * 30) + 20,
+    postGameFact: selectedTheme.fact,
+    timeLimit: 15
   };
+
+  if (gameType === 'drawing') {
+    return {
+      ...baseStory,
+      drawingPrompt: `Draw something inspired by "${context.mood}" - let your imagination flow!`,
+      colorPalette: getRandomColorPalette()
+    };
+  } else {
+    return {
+      ...baseStory,
+      writingPrompt: `Write a short story or poem inspired by "${context.mood}". Express your creativity!`,
+      wordLimit: 100
+    };
+  }
 }
 
 serve(async (req) => {
@@ -195,9 +269,9 @@ serve(async (req) => {
 
     const context: StoryGenerationContext = await req.json()
     
-    if (!context.currentThought) {
+    if (!context.mood) {
       return new Response(
-        JSON.stringify({ error: 'currentThought is required' }),
+        JSON.stringify({ error: 'mood is required' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -213,7 +287,7 @@ serve(async (req) => {
         // Add slight variation to context for each story
         const variedContext = {
           ...context,
-          currentThought: context.currentThought + (i > 0 ? ` (variation ${i + 1})` : '')
+          mood: context.mood + (i > 0 ? ` (variation ${i + 1})` : '')
         };
         
         const story = await generateStoryWithAI(variedContext);
@@ -252,7 +326,7 @@ serve(async (req) => {
     
     // Return fallback story on error
     const fallbackStory = generateFallbackStory({ 
-      currentThought: 'adventure begins now' 
+      mood: 'creative inspiration' 
     });
     
     return new Response(

@@ -1,10 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, Info, Gamepad2, Gift } from 'lucide-react-native';
+import { Play, Info, Palette, PenTool } from 'lucide-react-native';
 import { StorySegment } from '@/types';
-import { gameContent } from '@/data/storyData';
-import { router } from 'expo-router';
 import AIStoryIndicator from './AIStoryIndicator';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -17,18 +15,32 @@ interface StoryCardProps {
 }
 
 export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted }: StoryCardProps) {
-  const getPostGameFact = () => {
-    return segment.postGameFact ||
-      gameContent.postGameFacts?.[segment.gameType] ||
-      'Great job! You\'re building valuable cognitive skills with every game you play.';
-  };
-
-  const handleClaimReward = () => {
-    router.push('/claim-reward');
-  };
-
   // Check if this is an AI-generated story
   const isAIGenerated = segment.id.startsWith('ai-');
+
+  const getTaskIcon = () => {
+    switch (segment.gameType) {
+      case 'drawing':
+        return Palette;
+      case 'writing':
+        return PenTool;
+      default:
+        return Play;
+    }
+  };
+
+  const getTaskDisplayName = () => {
+    switch (segment.gameType) {
+      case 'drawing':
+        return 'DRAWING TASK';
+      case 'writing':
+        return 'WRITING TASK';
+      default:
+        return 'CREATIVE TASK';
+    }
+  };
+
+  const TaskIcon = getTaskIcon();
 
   return (
     <View style={styles.container}>
@@ -50,24 +62,39 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
           <Text style={styles.title}>{segment.title}</Text>
 
           {isCompleted ? (
-            <View style={styles.factContainer}>
-              <Text style={styles.factText} numberOfLines={2} ellipsizeMode="tail">
-                {getPostGameFact()}
+            <View style={styles.completedContainer}>
+              <Text style={styles.completedText}>
+                ✨ Task completed! You've expressed your creativity beautifully.
               </Text>
             </View>
           ) : (
             <Text style={styles.description}>{segment.text}</Text>
           )}
 
-          <View style={styles.gameInfo}>
-            <View style={styles.gameTypeRow}>
-              <Gamepad2 size={20} color="#8B5CF6" />
-              <Text style={styles.gameTypeText}>
-                {segment.gameType.replace('-', ' ').toUpperCase()}
+          <View style={styles.taskInfo}>
+            <View style={styles.taskTypeRow}>
+              <TaskIcon size={20} color="#8B5CF6" />
+              <Text style={styles.taskTypeText}>
+                {getTaskDisplayName()}
               </Text>
             </View>
             <Text style={styles.xpReward}>+{segment.xpReward} SYM</Text>
           </View>
+
+          {/* Task-specific details */}
+          {!isCompleted && (
+            <View style={styles.taskDetails}>
+              {segment.gameType === 'drawing' && segment.drawingPrompt && (
+                <Text style={styles.taskPrompt}>🎨 {segment.drawingPrompt}</Text>
+              )}
+              {segment.gameType === 'writing' && segment.writingPrompt && (
+                <Text style={styles.taskPrompt}>✍️ {segment.writingPrompt}</Text>
+              )}
+              {segment.timeLimit && (
+                <Text style={styles.timeLimit}>⏱️ {segment.timeLimit} minutes</Text>
+              )}
+            </View>
+          )}
         </View>
 
         <View style={styles.buttonContainer}>
@@ -82,31 +109,16 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
               {isCompleted ? (
                 <>
                   <Info size={20} color="white" />
-                  <Text style={styles.playButtonText}>View Info</Text>
+                  <Text style={styles.playButtonText}>View Details</Text>
                 </>
               ) : (
                 <>
                   <Play size={20} color="white" />
-                  <Text style={styles.playButtonText}>Play Game</Text>
+                  <Text style={styles.playButtonText}>Start Creating</Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          {isCompleted && (
-            <TouchableOpacity
-              style={styles.claimButton}
-              onPress={handleClaimReward}
-            >
-              <LinearGradient
-                colors={['#F59E0B', '#EF4444']}
-                style={styles.claimButtonGradient}
-              >
-                <Gift size={20} color="white" />
-                <Text style={styles.claimButtonText}>Claim Reward</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
     </View>
@@ -155,30 +167,31 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 16,
   },
-  factContainer: {
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+  completedContainer: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#8B5CF6',
+    borderLeftColor: '#10B981',
   },
-  factText: {
+  completedText: {
     color: '#E5E7EB',
     fontSize: 16,
     lineHeight: 24,
     fontStyle: 'italic',
   },
-  gameInfo: {
+  taskInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  gameTypeRow: {
+  taskTypeRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  gameTypeText: {
+  taskTypeText: {
     color: '#8B5CF6',
     fontSize: 14,
     fontWeight: 'bold',
@@ -188,6 +201,24 @@ const styles = StyleSheet.create({
     color: '#10B981',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  taskDetails: {
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 12,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#8B5CF6',
+  },
+  taskPrompt: {
+    color: '#E5E7EB',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  timeLimit: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    fontStyle: 'italic',
   },
   buttonContainer: {
     gap: 12,
@@ -209,23 +240,6 @@ const styles = StyleSheet.create({
   playButtonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  claimButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  claimButtonGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-  },
-  claimButtonText: {
-    color: 'white',
-    fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },

@@ -1,18 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, CreditCard as Edit3, User } from 'lucide-react-native';
+import { Star, Edit3, User } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProgress } from '@/hooks/useUserProgress';
 
 interface XPTrackerProps {
   xp: number;
-  currentStoryTitle: string;
-  onThoughtPress: () => void;
+  currentMood: string;
+  onMoodPress: () => void;
 }
 
-export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPTrackerProps) {
+export default function XPTracker({ xp, currentMood, onMoodPress }: XPTrackerProps) {
   const { isSignedIn } = useAuth();
   const { progress } = useUserProgress();
 
@@ -24,13 +24,13 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
     }
   };
 
-  // Get current thought from database or use default
-  const currentThought = isSignedIn ? (progress?.current_thought || 'adventure begins now') : 'adventure begins now';
+  // Get current mood from database or use default
+  const mood = isSignedIn ? (progress?.mood || 'creative inspiration') : 'creative inspiration';
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.thoughtButton} onPress={onThoughtPress}>
+        <TouchableOpacity style={styles.moodButton} onPress={onMoodPress}>
           <Edit3 size={16} color="white" />
         </TouchableOpacity>
         
@@ -45,10 +45,10 @@ export default function XPTracker({ xp, currentStoryTitle, onThoughtPress }: XPT
             </LinearGradient>
           </View>
           
-          {/* Current Thought Display */}
-          <TouchableOpacity style={styles.thoughtDisplay} onPress={onThoughtPress}>
-            <Text style={styles.thoughtText} numberOfLines={1} ellipsizeMode="tail">
-              "{currentThought}"
+          {/* Current Mood Display */}
+          <TouchableOpacity style={styles.moodDisplay} onPress={onMoodPress}>
+            <Text style={styles.moodText} numberOfLines={1} ellipsizeMode="tail">
+              "{mood}"
             </Text>
           </TouchableOpacity>
         </View>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  thoughtButton: {
+  moodButton: {
     backgroundColor: 'rgba(139, 92, 246, 0.8)',
     borderRadius: 20,
     width: 40,
@@ -120,14 +120,14 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginLeft: 6,
   },
-  thoughtDisplay: {
+  moodDisplay: {
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
     maxWidth: 200,
   },
-  thoughtText: {
+  moodText: {
     color: 'white',
     fontSize: 12,
     fontStyle: 'italic',

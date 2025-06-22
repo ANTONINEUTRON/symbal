@@ -1,44 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Send, Lightbulb } from 'lucide-react-native';
+import { X, Send, Heart } from 'lucide-react-native';
 
 interface ThoughtModalProps {
   visible: boolean;
-  currentThought: string;
+  currentMood: string;
   onClose: () => void;
-  onUpdate: (thought: string) => void;
+  onUpdate: (mood: string) => void;
 }
 
-export default function ThoughtModal({ visible, currentThought, onClose, onUpdate }: ThoughtModalProps) {
-  const [thought, setThought] = useState(currentThought);
+export default function ThoughtModal({ visible, currentMood, onClose, onUpdate }: ThoughtModalProps) {
+  const [mood, setMood] = useState(currentMood);
   const [wordCount, setWordCount] = useState(0);
 
-  // Update local state when currentThought prop changes
+  // Update local state when currentMood prop changes
   useEffect(() => {
-    setThought(currentThought);
-    const words = currentThought.split(' ').filter(word => word.length > 0);
+    setMood(currentMood);
+    const words = currentMood.split(' ').filter(word => word.length > 0);
     setWordCount(words.length);
-  }, [currentThought]);
+  }, [currentMood]);
 
   const handleTextChange = (text: string) => {
     const words = text.split(' ').filter(word => word.length > 0);
     if (words.length <= 3) {
-      setThought(text);
+      setMood(text);
       setWordCount(words.length);
     }
   };
 
   const handleSubmit = () => {
-    if (thought.trim() && wordCount > 0) {
-      onUpdate(thought.trim());
+    if (mood.trim() && wordCount > 0) {
+      onUpdate(mood.trim());
     }
   };
 
   const handleClose = () => {
-    // Reset to current thought when closing without saving
-    setThought(currentThought);
-    const words = currentThought.split(' ').filter(word => word.length > 0);
+    // Reset to current mood when closing without saving
+    setMood(currentMood);
+    const words = currentMood.split(' ').filter(word => word.length > 0);
     setWordCount(words.length);
     onClose();
   };
@@ -59,8 +59,8 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
             >
               <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                  <Lightbulb size={24} color="#8B5CF6" />
-                  <Text style={styles.title}>Update Your Thought</Text>
+                  <Heart size={24} color="#EC4899" />
+                  <Text style={styles.title}>Update Your Mood</Text>
                 </View>
                 <TouchableOpacity onPress={handleClose}>
                   <X size={24} color="white" />
@@ -68,20 +68,20 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
               </View>
 
               <Text style={styles.description}>
-                Your thoughts shape the story. Choose up to 3 words that will influence what happens next.
+                Your mood shapes your creative journey. Choose up to 3 words that capture how you're feeling right now.
               </Text>
 
-              <View style={styles.currentThoughtContainer}>
-                <Text style={styles.currentThoughtLabel}>Current thought:</Text>
-                <Text style={styles.currentThoughtText}>"{currentThought}"</Text>
+              <View style={styles.currentMoodContainer}>
+                <Text style={styles.currentMoodLabel}>Current mood:</Text>
+                <Text style={styles.currentMoodText}>"{currentMood}"</Text>
               </View>
 
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  value={thought}
+                  value={mood}
                   onChangeText={handleTextChange}
-                  placeholder="Enter your new thought..."
+                  placeholder="Enter your current mood..."
                   placeholderTextColor="#9CA3AF"
                   multiline
                   maxLength={50}
@@ -100,21 +100,21 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
                 <View style={styles.exampleTags}>
                   <TouchableOpacity 
                     style={styles.exampleTag}
-                    onPress={() => handleTextChange('hope courage light')}
+                    onPress={() => handleTextChange('creative inspired energetic')}
                   >
-                    <Text style={styles.exampleTagText}>hope courage light</Text>
+                    <Text style={styles.exampleTagText}>creative inspired energetic</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.exampleTag}
-                    onPress={() => handleTextChange('mystery dark secrets')}
+                    onPress={() => handleTextChange('calm peaceful reflective')}
                   >
-                    <Text style={styles.exampleTagText}>mystery dark secrets</Text>
+                    <Text style={styles.exampleTagText}>calm peaceful reflective</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     style={styles.exampleTag}
-                    onPress={() => handleTextChange('adventure awaits now')}
+                    onPress={() => handleTextChange('adventurous bold curious')}
                   >
-                    <Text style={styles.exampleTagText}>adventure awaits now</Text>
+                    <Text style={styles.exampleTagText}>adventurous bold curious</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -122,21 +122,21 @@ export default function ThoughtModal({ visible, currentThought, onClose, onUpdat
               <TouchableOpacity
                 style={[
                   styles.submitButton, 
-                  (!thought.trim() || wordCount === 0 || thought === currentThought) && styles.submitButtonDisabled
+                  (!mood.trim() || wordCount === 0 || mood === currentMood) && styles.submitButtonDisabled
                 ]}
                 onPress={handleSubmit}
-                disabled={!thought.trim() || wordCount === 0 || thought === currentThought}
+                disabled={!mood.trim() || wordCount === 0 || mood === currentMood}
               >
                 <LinearGradient
                   colors={
-                    thought.trim() && wordCount > 0 && thought !== currentThought 
-                      ? ['#8B5CF6', '#EC4899'] 
+                    mood.trim() && wordCount > 0 && mood !== currentMood 
+                      ? ['#EC4899', '#8B5CF6'] 
                       : ['#6B7280', '#4B5563']
                   }
                   style={styles.submitButtonGradient}
                 >
                   <Send size={20} color="white" />
-                  <Text style={styles.submitButtonText}>Update Story</Text>
+                  <Text style={styles.submitButtonText}>Update Creative Journey</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </LinearGradient>
@@ -187,21 +187,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 20,
   },
-  currentThoughtContainer: {
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+  currentMoodContainer: {
+    backgroundColor: 'rgba(236, 72, 153, 0.1)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#8B5CF6',
+    borderLeftColor: '#EC4899',
   },
-  currentThoughtLabel: {
-    color: '#8B5CF6',
+  currentMoodLabel: {
+    color: '#EC4899',
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
   },
-  currentThoughtText: {
+  currentMoodText: {
     color: 'white',
     fontSize: 16,
     fontStyle: 'italic',
@@ -244,13 +244,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   exampleTag: {
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    backgroundColor: 'rgba(236, 72, 153, 0.2)',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   exampleTagText: {
-    color: '#8B5CF6',
+    color: '#EC4899',
     fontSize: 12,
     fontWeight: '600',
   },

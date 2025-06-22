@@ -1,9 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Lightbulb, Trophy, Star } from 'lucide-react-native';
+import { X, Sparkles, Trophy, Star } from 'lucide-react-native';
 import { StorySegment } from '@/types';
-import { gameContent } from '@/data/storyData';
 
 interface PostGameInfoModalProps {
   visible: boolean;
@@ -13,12 +12,10 @@ interface PostGameInfoModalProps {
 
 export default function PostGameInfoModal({ visible, segment, onClose }: PostGameInfoModalProps) {
   const getPostGameFact = () => {
-    return segment.postGameFact ||
-      gameContent.postGameFacts?.[segment.gameType] ||
-      'Great job! You\'re building valuable cognitive skills with every game you play.';
+    return segment.postGameFact || '🎨 Creative expression enhances mental well-being and cognitive flexibility!';
   };
 
-  const getGameTypeDisplayName = () => {
+  const getTaskTypeDisplayName = () => {
     return segment.gameType.replace('-', ' ').toUpperCase();
   };
 
@@ -39,7 +36,7 @@ export default function PostGameInfoModal({ visible, segment, onClose }: PostGam
               <View style={styles.header}>
                 <View style={styles.headerLeft}>
                   <Trophy size={24} color="#F59E0B" />
-                  <Text style={styles.title}>Game Completed!</Text>
+                  <Text style={styles.title}>Creative Task Completed!</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <X size={24} color="white" />
@@ -47,18 +44,18 @@ export default function PostGameInfoModal({ visible, segment, onClose }: PostGam
               </View>
 
               <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.gameInfoSection}>
-                  <Text style={styles.gameTitle}>{segment.title}</Text>
-                  <View style={styles.gameDetails}>
-                    <View style={styles.gameDetailItem}>
-                      <Text style={styles.gameDetailLabel}>Game Type</Text>
-                      <Text style={styles.gameDetailValue}>{getGameTypeDisplayName()}</Text>
+                <View style={styles.taskInfoSection}>
+                  <Text style={styles.taskTitle}>{segment.title}</Text>
+                  <View style={styles.taskDetails}>
+                    <View style={styles.taskDetailItem}>
+                      <Text style={styles.taskDetailLabel}>Task Type</Text>
+                      <Text style={styles.taskDetailValue}>{getTaskTypeDisplayName()}</Text>
                     </View>
-                    <View style={styles.gameDetailItem}>
-                      <Text style={styles.gameDetailLabel}>SYM Earned</Text>
+                    <View style={styles.taskDetailItem}>
+                      <Text style={styles.taskDetailLabel}>SYM Earned</Text>
                       <View style={styles.symContainer}>
                         <Star size={16} color="#F59E0B" />
-                        <Text style={styles.gameDetailValue}>+{segment.xpReward}</Text>
+                        <Text style={styles.taskDetailValue}>+{segment.xpReward}</Text>
                       </View>
                     </View>
                   </View>
@@ -66,8 +63,8 @@ export default function PostGameInfoModal({ visible, segment, onClose }: PostGam
 
                 <View style={styles.factSection}>
                   <View style={styles.factHeader}>
-                    <Lightbulb size={28} color="#8B5CF6" />
-                    <Text style={styles.factTitle}>Did You Know?</Text>
+                    <Sparkles size={28} color="#8B5CF6" />
+                    <Text style={styles.factTitle}>Creative Insight</Text>
                   </View>
 
                   <View style={styles.factContainer}>
@@ -84,8 +81,8 @@ export default function PostGameInfoModal({ visible, segment, onClose }: PostGam
 
                 <View style={styles.encouragementSection}>
                   <Text style={styles.encouragementText}>
-                    Keep playing to unlock more insights and build your cognitive skills!
-                    Every game you complete makes you smarter and more resilient.
+                    🎨 Amazing work! Your creativity is growing stronger with each task. 
+                    Keep exploring, expressing, and discovering new ways to bring your imagination to life!
                   </Text>
                 </View>
               </ScrollView>
@@ -95,7 +92,7 @@ export default function PostGameInfoModal({ visible, segment, onClose }: PostGam
                   colors={['#8B5CF6', '#EC4899']}
                   style={styles.continueButtonGradient}
                 >
-                  <Text style={styles.continueButtonText}>Continue Journey</Text>
+                  <Text style={styles.continueButtonText}>Continue Creating</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </LinearGradient>
@@ -156,32 +153,32 @@ const styles = StyleSheet.create({
   scrollContent: {
     flex: 1,
   },
-  gameInfoSection: {
+  taskInfoSection: {
     marginBottom: 24,
   },
-  gameTitle: {
+  taskTitle: {
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
   },
-  gameDetails: {
+  taskDetails: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
     padding: 16,
   },
-  gameDetailItem: {
+  taskDetailItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
   },
-  gameDetailLabel: {
+  taskDetailLabel: {
     color: '#9CA3AF',
     fontSize: 14,
   },
-  gameDetailValue: {
+  taskDetailValue: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',

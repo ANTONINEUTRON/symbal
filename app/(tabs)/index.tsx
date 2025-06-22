@@ -8,7 +8,6 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import { initialStorySegments } from '@/data/storyData';
 import { StorySegment } from '@/types';
 import StoryCard from '@/components/StoryCard';
 import ThoughtModal from '@/components/ThoughtModal';
@@ -23,12 +22,12 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function StoryFeed() {
   const { isSignedIn } = useAuth();
-  const { progress, completeGame, updateThought } = useUserProgress();
+  const { progress, completeGame, updateMood } = useUserProgress();
   const { generateStory, isGenerating, error } = useAIStoryGeneration();
   
-  const [storySegments, setStorySegments] = useState<StorySegment[]>(initialStorySegments);
+  const [storySegments, setStorySegments] = useState<StorySegment[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [thoughtModalVisible, setThoughtModalVisible] = useState(false);
+  const [moodModalVisible, setMoodModalVisible] = useState(false);
   const [gameModalVisible, setGameModalVisible] = useState(false);
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [currentGame, setCurrentGame] = useState<StorySegment | null>(null);
@@ -38,19 +37,49 @@ export default function StoryFeed() {
 
   // Use progress from Supabase if signed in, otherwise use local state
   const currentXP = isSignedIn ? (progress?.xp || 0) : 0;
-  const currentThought = isSignedIn ? (progress?.current_thought || 'adventure begins now') : 'adventure begins now';
+  const currentMood = isSignedIn ? (progress?.mood || 'creative inspiration') : 'creative inspiration';
   const completedGames = isSignedIn ? (progress?.completed_games || []) : [];
+
+  // Generate initial story on mount
+  useEffect(() => {
+    if (storySegments.length === 0) {
+      generateInitialStory();
+    }
+  }, []);
 
   // Show error if AI generation fails
   useEffect(() => {
     if (error) {
       Alert.alert(
         'Story Generation',
-        'Using offline mode. Connect to internet for AI-powered stories.',
+        'Using offline mode. Connect to internet for AI-powered creative tasks.',
         [{ text: 'OK' }]
       );
     }
   }, [error]);
+
+  const generateInitialStory = async () => {
+    try {
+      const newStories = await generateStory(currentMood, 0);
+      setStorySegments(newStories);
+    } catch (err) {
+      console.error('Error generating initial story:', err);
+      // Set a fallback story
+      const fallbackStory: StorySegment = {
+        id: `fallback-${Date.now()}`,
+        title: 'Creative Awakening',
+        text: 'Your creative journey begins with a simple challenge.',
+        gameType: 'drawing',
+        imageUrl: 'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
+        xpReward: 20,
+        postGameFact: '🎨 Creative expression enhances mental well-being!',
+        drawingPrompt: 'Draw something that makes you happy',
+        colorPalette: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+        timeLimit: 15
+      };
+      setStorySegments([fallbackStory]);
+    }
+  };
 
   const handleSwipeUp = async () => {
     if (currentIndex < storySegments.length - 1) {
@@ -58,7 +87,7 @@ export default function StoryFeed() {
     } else {
       // Generate more story content when reaching the end
       try {
-        const newStories = await generateStory(currentThought, currentIndex);
+        const newStories = await generateStory(currentMood, currentIndex);
         setStorySegments([...storySegments, ...newStories]);
         setCurrentIndex(currentIndex + 1);
       } catch (err) {
@@ -66,12 +95,17 @@ export default function StoryFeed() {
         // Fallback to basic story if AI fails
         const fallbackStory: StorySegment = {
           id: `fallback-${Date.now()}`,
-          title: 'The Journey Continues',
-          text: 'Your adventure unfolds with new challenges ahead.',
-          gameType: 'quiz',
+          title: 'The Creative Continues',
+          text: 'Your creative journey unfolds with new challenges ahead.',
+          gameType: Math.random() > 0.5 ? 'drawing' : 'writing',
           imageUrl: 'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
-          xpReward: 15,
-          postGameFact: '🌟 Every step forward is progress, no matter how small!'
+          xpReward: 25,
+          postGameFact: '🌟 Every creative act builds your artistic confidence!',
+          drawingPrompt: 'Express your current mood through art',
+          writingPrompt: 'Write about a moment that inspired you',
+          wordLimit: 100,
+          colorPalette: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
+          timeLimit: 15
         };
         setStorySegments([...storySegments, fallbackStory]);
         setCurrentIndex(currentIndex + 1);
@@ -137,7 +171,7 @@ export default function StoryFeed() {
     if (currentGame) {
       if (isSignedIn) {
         try {
-          await completeGame(currentGame.id, earnedXP);
+          await completeGame(currentGame.id, earnedXP, currentGame.gameType);
         } catch (error) {
           console.error('Error saving game completion:', error);
         }
@@ -147,26 +181,26 @@ export default function StoryFeed() {
     setCurrentGame(null);
   };
 
-  const handleThoughtUpdate = async (newThought: string) => {
+  const handleMoodUpdate = async (newMood: string) => {
     if (isSignedIn) {
       try {
-        await updateThought(newThought);
+        await updateMood(newMood);
       } catch (error) {
-        console.error('Error updating thought:', error);
+        console.error('Error updating mood:', error);
       }
     }
     
     // Generate new AI-powered story content starting from next screen
     try {
-      const newStories = await generateStory(newThought, currentIndex);
+      const newStories = await generateStory(newMood, currentIndex);
       const updatedStories = [...storySegments];
       updatedStories.splice(currentIndex + 1, updatedStories.length - currentIndex - 1, ...newStories);
       setStorySegments(updatedStories);
     } catch (err) {
-      console.error('Error generating story after thought update:', err);
+      console.error('Error generating story after mood update:', err);
     }
     
-    setThoughtModalVisible(false);
+    setMoodModalVisible(false);
   };
 
   const currentStory = storySegments[currentIndex];
@@ -180,8 +214,8 @@ export default function StoryFeed() {
     <View style={styles.container}>
       <XPTracker 
         xp={currentXP} 
-        currentStoryTitle={currentStory.title}
-        onThoughtPress={() => setThoughtModalVisible(true)}
+        currentMood={currentStory.title}
+        onMoodPress={() => setMoodModalVisible(true)}
       />
       
       <PanGestureHandler onGestureEvent={gestureHandler}>
@@ -196,10 +230,10 @@ export default function StoryFeed() {
       </PanGestureHandler>
 
       <ThoughtModal
-        visible={thoughtModalVisible}
-        currentThought={currentThought}
-        onClose={() => setThoughtModalVisible(false)}
-        onUpdate={handleThoughtUpdate}
+        visible={moodModalVisible}
+        currentMood={currentMood}
+        onClose={() => setMoodModalVisible(false)}
+        onUpdate={handleMoodUpdate}
       />
 
       {currentGame && (

@@ -1,17 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Lightbulb, ArrowRight, Gift } from 'lucide-react-native';
-import { StorySegment } from '@/types';
-import { gameContent } from '@/data/storyData';
-import { router } from 'expo-router';
-import QuizGame from '@/components/games/QuizGame';
-import TrueFalseGame from '@/components/games/TrueFalseGame';
-import WordScrambleGame from '@/components/games/WordScrambleGame';
-import MatchingGame from '@/components/games/MatchingGame';
-import PassagePuzzleGame from '@/components/games/PassagePuzzleGame';
-import PlaceholderGame from '@/components/games/PlaceholderGame';
-import TypingRaceGame from '@/components/games/TypingRaceGame';
+import { X, Sparkles, ArrowRight } from 'lucide-react-native';
+import { StorySegment, UserSubmission, AIJudgment } from '@/types';
+import { judgeSubmissionWithAI } from '@/lib/gemini';
+import DrawingCanvas from '@/components/games/DrawingCanvas';
+import WritingInput from '@/components/games/WritingInput';
 
 interface GameModalProps {
   visible: boolean;
@@ -22,50 +16,71 @@ interface GameModalProps {
 
 export default function GameModal({ visible, segment, onClose, onComplete }: GameModalProps) {
   const [showPostGameInfo, setShowPostGameInfo] = useState(false);
-  const [postGameMessage, setPostGameMessage] = useState('');
+  const [aiJudgment, setAiJudgment] = useState<AIJudgment | null>(null);
+  const [isJudging, setIsJudging] = useState(false);
 
-  const handleGameComplete = () => {
-    // Get the post-game fact
-    const fact = segment.postGameFact ||
-      gameContent.postGameFacts?.[segment.gameType] ||
-      '🎉 Great job! You\'re building valuable cognitive skills with every game you play.';
+  const handleTaskComplete = async (submissionContent: string) => {
+    setIsJudging(true);
 
-    setPostGameMessage(fact);
-    setShowPostGameInfo(true);
+    try {
+      // Create submission object
+      const submission: UserSubmission = {
+        type: segment.gameType,
+        content: submissionContent,
+        submittedAt: new Date().toISOString(),
+        taskId: segment.id
+      };
+
+      // Get AI judgment
+      const judgment = await judgeSubmissionWithAI(submission, segment);
+      setAiJudgment(judgment);
+      setShowPostGameInfo(true);
+    } catch (error) {
+      console.error('Error getting AI judgment:', error);
+      
+      // Fallback judgment
+      const fallbackJudgment: AIJudgment = {
+        score: 8,
+        feedback: `Your ${segment.gameType} shows wonderful creativity and imagination!`,
+        encouragement: '🎨 Amazing creative work! Keep expressing yourself!',
+        highlights: ['Creative expression', 'Unique interpretation', 'Artistic courage']
+      };
+      
+      setAiJudgment(fallbackJudgment);
+      setShowPostGameInfo(true);
+    } finally {
+      setIsJudging(false);
+    }
   };
 
   const handleContinue = () => {
     setShowPostGameInfo(false);
+    setAiJudgment(null);
     onComplete(segment.xpReward);
   };
 
-  const handleClaimReward = () => {
-    setShowPostGameInfo(false);
-    onComplete(segment.xpReward);
-    router.push('/claim-reward');
-  };
-
-  const renderGame = () => {
-    switch (segment.gameType) {
-      case 'quiz':
-        return <QuizGame onComplete={handleGameComplete} />;
-      case 'true-false':
-        return <TrueFalseGame onComplete={handleGameComplete} />;
-      case 'word-scramble':
-        return <WordScrambleGame onComplete={handleGameComplete} />;
-      case 'matching':
-        return <MatchingGame onComplete={handleGameComplete} />;
-      case 'passage-puzzle':
-        return <PassagePuzzleGame onComplete={handleGameComplete} />;
-      case 'crossword':
-        return <PlaceholderGame gameType="Crossword" onComplete={handleGameComplete} />;
-      case 'sudoku':
-        return <PlaceholderGame gameType="Sudoku" onComplete={handleGameComplete} />;
-      case 'typing-race':
-        return <TypingRaceGame onComplete={handleGameComplete} />;
-      default:
-        return <PlaceholderGame gameType="Unknown" onComplete={handleGameComplete} />;
+  const renderTask = () => {
+    if (segment.gameType === 'drawing') {
+      return (
+        <DrawingCanvas
+          prompt={segment.drawingPrompt || 'Create something beautiful!'}
+          colorPalette={segment.colorPalette || ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']}
+          timeLimit={segment.timeLimit || 15}
+          onComplete={handleTaskComplete}
+        />
+      );
+    } else if (segment.gameType === 'writing') {
+      return (
+        <WritingInput
+          prompt={segment.writingPrompt || 'Write something meaningful!'}
+          wordLimit={segment.wordLimit || 100}
+          timeLimit={segment.timeLimit || 15}
+          onComplete={handleTaskComplete}
+        />
+      );
     }
+
+    return null;
   };
 
   return (
@@ -86,12 +101,34 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
             </TouchableOpacity>
           </View>
 
-          <View style={styles.gameContainer}>
-            {renderGame()}
+          <View style={styles.taskContainer}>
+            {renderTask()}
           </View>
 
-          {/* Post-Game Information Overlay */}
-          {showPostGameInfo && (
+          {/* AI Judgment Loading */}
+          {isJudging && (
+            <View style={styles.judgingOverlay}>
+              <View style={styles.judgingContainer}>
+                <LinearGradient
+                  colors={['#8B5CF6', '#EC4899', '#F59E0B']}
+                  style={styles.judgingGradient}
+                >
+                  <View style={styles.judgingContent}>
+                    <Sparkles size={32} color="white" />
+                    <Text style={styles.judgingTitle}>AI is reviewing your work...</Text>
+                    <View style={styles.loadingDots}>
+                      <View style={styles.loadingDot} />
+                      <View style={[styles.loadingDot, styles.loadingDotDelay1]} />
+                      <View style={[styles.loadingDot, styles.loadingDotDelay2]} />
+                    </View>
+                  </View>
+                </LinearGradient>
+              </View>
+            </View>
+          )}
+
+          {/* AI Judgment Results */}
+          {showPostGameInfo && aiJudgment && (
             <View style={styles.postGameOverlay}>
               <View style={styles.postGameContainer}>
                 <LinearGradient
@@ -100,35 +137,42 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
                 >
                   <View style={styles.postGameContent}>
                     <View style={styles.postGameHeader}>
-                      <Lightbulb size={32} color="white" />
-                      <Text style={styles.postGameTitle}>Did You Know?</Text>
+                      <Text style={styles.scoreText}>Score: {aiJudgment.score}/10</Text>
+                      <Text style={styles.encouragementText}>{aiJudgment.encouragement}</Text>
                     </View>
 
-                    <Text style={styles.postGameText}>
-                      {postGameMessage}
-                    </Text>
-
-                    <View style={styles.postGameButtons}>
-                      <TouchableOpacity
-                        style={styles.continueButton}
-                        onPress={handleContinue}
-                      >
-                        <View style={styles.continueButtonContent}>
-                          <Text style={styles.continueButtonText}>Continue Journey</Text>
-                          <ArrowRight size={20} color="white" />
-                        </View>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.claimRewardButton}
-                        onPress={handleClaimReward}
-                      >
-                        <View style={styles.claimRewardButtonContent}>
-                          <Gift size={20} color="white" />
-                          <Text style={styles.claimRewardButtonText}>Claim Reward</Text>
-                        </View>
-                      </TouchableOpacity>
+                    <View style={styles.feedbackSection}>
+                      <Text style={styles.feedbackTitle}>AI Feedback:</Text>
+                      <Text style={styles.feedbackText}>{aiJudgment.feedback}</Text>
                     </View>
+
+                    {aiJudgment.highlights && aiJudgment.highlights.length > 0 && (
+                      <View style={styles.highlightsSection}>
+                        <Text style={styles.highlightsTitle}>✨ What stood out:</Text>
+                        {aiJudgment.highlights.map((highlight, index) => (
+                          <Text key={index} style={styles.highlightItem}>• {highlight}</Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {aiJudgment.improvements && aiJudgment.improvements.length > 0 && (
+                      <View style={styles.improvementsSection}>
+                        <Text style={styles.improvementsTitle}>💡 For next time:</Text>
+                        {aiJudgment.improvements.map((improvement, index) => (
+                          <Text key={index} style={styles.improvementItem}>• {improvement}</Text>
+                        ))}
+                      </View>
+                    )}
+
+                    <TouchableOpacity
+                      style={styles.continueButton}
+                      onPress={handleContinue}
+                    >
+                      <View style={styles.continueButtonContent}>
+                        <Text style={styles.continueButtonText}>Continue Journey</Text>
+                        <ArrowRight size={20} color="white" />
+                      </View>
+                    </TouchableOpacity>
                   </View>
                 </LinearGradient>
               </View>
@@ -161,9 +205,58 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
   },
-  gameContainer: {
+  taskContainer: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  judgingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  judgingContainer: {
+    width: '100%',
+    maxWidth: 300,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  judgingGradient: {
+    padding: 32,
+  },
+  judgingContent: {
+    alignItems: 'center',
+  },
+  judgingTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  loadingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'white',
+    marginHorizontal: 4,
+    opacity: 0.4,
+  },
+  loadingDotDelay1: {
+    opacity: 0.7,
+  },
+  loadingDotDelay2: {
+    opacity: 1,
   },
   postGameOverlay: {
     position: 'absolute',
@@ -181,17 +274,10 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
+    maxHeight: '80%',
   },
   postGameGradient: {
-    padding: 32,
+    padding: 24,
   },
   postGameContent: {
     alignItems: 'center',
@@ -200,22 +286,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
-  postGameTitle: {
+  scoreText: {
     color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
-    marginTop: 12,
+    marginBottom: 8,
   },
-  postGameText: {
+  encouragementText: {
+    color: 'white',
+    fontSize: 18,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  feedbackSection: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  feedbackTitle: {
     color: 'white',
     fontSize: 16,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 32,
+    fontWeight: 'bold',
+    marginBottom: 8,
   },
-  postGameButtons: {
+  feedbackText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  highlightsSection: {
     width: '100%',
-    gap: 12,
+    marginBottom: 16,
+  },
+  highlightsTitle: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  highlightItem: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  improvementsSection: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  improvementsTitle: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  improvementItem: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 4,
   },
   continueButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -228,29 +356,9 @@ const styles = StyleSheet.create({
   continueButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
   },
   continueButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  claimRewardButton: {
-    backgroundColor: 'rgba(245, 158, 11, 0.3)',
-    borderRadius: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.5)',
-  },
-  claimRewardButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  claimRewardButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
