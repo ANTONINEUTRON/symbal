@@ -54,9 +54,6 @@ export default function StoryCard({ segment, onPlayGame, onShowInfo, isCompleted
         style={styles.gradient}
       />
 
-      {/* AI Story Indicator */}
-      <AIStoryIndicator isAIGenerated={isAIGenerated} />
-
       <View style={styles.content}>
         <View style={styles.textContent}>
           <Text style={styles.title}>{segment.title}</Text>

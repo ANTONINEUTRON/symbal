@@ -30,40 +30,50 @@ export default function XPTracker({ xp, currentMood, onMoodPress }: XPTrackerPro
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.moodButton} onPress={onMoodPress}>
-          <Edit3 size={16} color="white" />
-        </TouchableOpacity>
-        
-        <View style={styles.centerSection}>
-          <View style={styles.symSection}>
-            <LinearGradient
-              colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
-              style={styles.symChip}
-            >
-              <Star size={16} color="#F59E0B" />
-              <Text style={styles.symText}>{xp} SYM</Text>
-            </LinearGradient>
-          </View>
-          
-          {/* Current Mood Display */}
-          <TouchableOpacity style={styles.moodDisplay} onPress={onMoodPress}>
-            <Text style={styles.moodText} numberOfLines={1} ellipsizeMode="tail">
-              "{mood}"
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.settingsButton} 
-          onPress={handleSettingsPress}
-        >
+        {/* Merge Edit button and Mood Display */}
+        <TouchableOpacity style={styles.moodEditMergedContainer} onPress={onMoodPress}>
           <LinearGradient
-            colors={['#8B5CF6', '#EC4899']}
-            style={styles.settingsButtonGradient}
+            colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
+            style={styles.moodEditGradient}
           >
-            <Settings size={20} color="white" />
+            <View style={styles.moodButtonMerged}>
+              <Edit3 size={16} color="white" />
+            </View>
+            <View style={styles.moodDisplayMerged}>
+              <Text
+                style={styles.moodText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                "
+                {mood.length > 15 ? `${mood.slice(0, 15)}…` : mood}
+                "
+              </Text>
+            </View>
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* Merge SYM chip and settings button */}
+        <View style={styles.symSettingsContainer}>
+          <LinearGradient
+            colors={['rgba(139, 92, 246, 0.9)', 'rgba(236, 72, 153, 0.9)']}
+            style={styles.symChipMerged}
+          >
+            <Star size={16} color="#F59E0B" />
+            <Text style={styles.symText}>{xp} SYM</Text>
+          </LinearGradient>
+          <TouchableOpacity
+            style={styles.settingsButtonMerged}
+            onPress={handleSettingsPress}
+          >
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              style={styles.settingsButtonGradientMerged}
+            >
+              <Settings size={20} color="white" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -91,28 +101,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  centerSection: {
-    flex: 1,
-    marginHorizontal: 16,
+  symSettingsContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  symSection: {
-    marginBottom: 8,
-  },
-  symChip: {
+  symChipMerged: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  settingsButtonMerged: {
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    overflow: 'hidden',
+    marginLeft: 0,
+  },
+  settingsButtonGradientMerged: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
   },
   symText: {
     color: 'white',
@@ -133,14 +155,49 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  settingsButton: {
-    borderRadius: 20,
-    overflow: 'hidden',
+  moodEditContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 16,
+    paddingRight: 8,
+    marginLeft: 8,
+    maxWidth: 220,
   },
-  settingsButtonGradient: {
-    width: 40,
-    height: 40,
+  moodEditMergedContainer: {
+    maxWidth: 220,
+    flex: 1,
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  moodButtonMerged: {
+    backgroundColor: 'transparent',
+    borderTopLeftRadius: 18,
+    borderBottomLeftRadius: 18,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  moodEditGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    overflow: 'hidden',
+    paddingRight: 8,
+    flexWrap: 'wrap', // Allow wrapping
+    minHeight: 36,    // Ensure minimum height for aesthetics
+    maxWidth: 180,    // Prevent overflow on small screens
+  },
+  moodDisplayMerged: {
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    maxWidth: 120, // Increase if needed for longer moods
+    justifyContent: 'center',
+    flexShrink: 1, // Allow text to shrink/wrap
   },
 });
