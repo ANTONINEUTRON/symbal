@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
-import { Palette, RotateCcw, Check } from 'lucide-react-native';
+import { Palette, RotateCcw, Check, Eraser } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 40;
@@ -18,17 +18,23 @@ interface PathData {
   path: string;
   color: string;
   strokeWidth: number;
+  isEraser?: boolean;
 }
 
 export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onComplete }: DrawingCanvasProps) {
   const [paths, setPaths] = useState<PathData[]>([]);
   const [currentPath, setCurrentPath] = useState('');
-  const [selectedColor, setSelectedColor] = useState(colorPalette[0]);
+  const [selectedColor, setSelectedColor] = useState('#000000'); // Default to black
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [timeLeft, setTimeLeft] = useState(timeLimit * 60); // Convert to seconds
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isEraserMode, setIsEraserMode] = useState(false);
 
   const pathRef = useRef('');
+  const currentPathData = useRef<PathData | null>(null);
+
+  // Enhanced color palette with black and white
+  const enhancedPalette = ['#000000', '#FFFFFF', ...colorPalette];
 
   // Timer effect
   React.useEffect(() => {
@@ -50,6 +56,14 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
       pathRef.current = newPath;
       setCurrentPath(newPath);
       setIsDrawing(true);
+
+      // Create current path data
+      currentPathData.current = {
+        path: newPath,
+        color: isEraserMode ? '#FFFFFF' : selectedColor,
+        strokeWidth: isEraserMode ? strokeWidth * 2 : strokeWidth,
+        isEraser: isEraserMode
+      };
     },
 
     onPanResponderMove: (evt) => {
@@ -57,17 +71,20 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
       const newPath = `${pathRef.current} L${locationX},${locationY}`;
       pathRef.current = newPath;
       setCurrentPath(newPath);
+
+      // Update current path data
+      if (currentPathData.current) {
+        currentPathData.current.path = newPath;
+      }
     },
 
     onPanResponderRelease: () => {
-      if (pathRef.current) {
-        setPaths(prev => [...prev, {
-          path: pathRef.current,
-          color: selectedColor,
-          strokeWidth: strokeWidth
-        }]);
+      if (pathRef.current && currentPathData.current) {
+        // Add the completed path to the paths array
+        setPaths(prev => [...prev, currentPathData.current!]);
         setCurrentPath('');
         pathRef.current = '';
+        currentPathData.current = null;
       }
       setIsDrawing(false);
     },
@@ -77,18 +94,43 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     setPaths([]);
     setCurrentPath('');
     pathRef.current = '';
+    currentPathData.current = null;
+  };
+
+  const toggleEraser = () => {
+    setIsEraserMode(!isEraserMode);
+  };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+    setIsEraserMode(false); // Exit eraser mode when selecting a color
   };
 
   const handleComplete = () => {
     // Convert drawing to SVG string
-    const svgPaths = paths.map((pathData, index) => 
-      `<path d="${pathData.path}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`
-    ).join('\n');
+    const svgPaths = paths.map((pathData, index) => {
+      if (pathData.isEraser) {
+        return `<path d="${pathData.path}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+      }
+      return `<path d="${pathData.path}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+    }).join('\n');
+
+    // Include current path if drawing
+    let currentPathSvg = '';
+    if (currentPath && currentPathData.current) {
+      const pathData = currentPathData.current;
+      if (pathData.isEraser) {
+        currentPathSvg = `<path d="${currentPath}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+      } else {
+        currentPathSvg = `<path d="${currentPath}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+      }
+    }
 
     const svgString = `
       <svg width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="white"/>
         ${svgPaths}
-        ${currentPath ? `<path d="${currentPath}" stroke="${selectedColor}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />` : ''}
+        ${currentPathSvg}
       </svg>
     `;
 
@@ -100,6 +142,8 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  const hasDrawing = paths.length > 0 || currentPath.length > 0;
 
   return (
     <View style={styles.container}>
@@ -118,22 +162,32 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
           {...panResponder.panHandlers}
         >
           <Svg width={CANVAS_SIZE} height={CANVAS_SIZE} style={styles.svg}>
+            {/* White background */}
+            <Path
+              d={`M0,0 L${CANVAS_SIZE},0 L${CANVAS_SIZE},${CANVAS_SIZE} L0,${CANVAS_SIZE} Z`}
+              fill="white"
+              stroke="none"
+            />
+            
+            {/* Completed paths */}
             {paths.map((pathData, index) => (
               <Path
                 key={index}
                 d={pathData.path}
-                stroke={pathData.color}
+                stroke={pathData.isEraser ? 'white' : pathData.color}
                 strokeWidth={pathData.strokeWidth}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             ))}
-            {currentPath && (
+            
+            {/* Current path being drawn */}
+            {currentPath && currentPathData.current && (
               <Path
                 d={currentPath}
-                stroke={selectedColor}
-                strokeWidth={strokeWidth}
+                stroke={currentPathData.current.isEraser ? 'white' : currentPathData.current.color}
+                strokeWidth={currentPathData.current.strokeWidth}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -147,45 +201,67 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
       <View style={styles.colorPalette}>
         <Text style={styles.paletteLabel}>Colors</Text>
         <View style={styles.colorRow}>
-          {colorPalette.map((color, index) => (
+          {enhancedPalette.map((color, index) => (
             <TouchableOpacity
               key={index}
               style={[
                 styles.colorButton,
                 { backgroundColor: color },
-                selectedColor === color && styles.selectedColor
+                color === '#FFFFFF' && styles.whiteColorBorder,
+                selectedColor === color && !isEraserMode && styles.selectedColor
               ]}
-              onPress={() => setSelectedColor(color)}
+              onPress={() => handleColorSelect(color)}
             />
           ))}
         </View>
       </View>
 
-      {/* Brush Size */}
-      <View style={styles.brushSection}>
-        <Text style={styles.brushLabel}>Brush Size</Text>
-        <View style={styles.brushSizes}>
-          {[2, 4, 6, 8].map((size) => (
-            <TouchableOpacity
-              key={size}
-              style={[
-                styles.brushButton,
-                strokeWidth === size && styles.selectedBrush
-              ]}
-              onPress={() => setStrokeWidth(size)}
-            >
-              <View
+      {/* Tools Section */}
+      <View style={styles.toolsSection}>
+        <View style={styles.toolGroup}>
+          <Text style={styles.toolLabel}>Tools</Text>
+          <TouchableOpacity
+            style={[
+              styles.toolButton,
+              isEraserMode && styles.selectedTool
+            ]}
+            onPress={toggleEraser}
+          >
+            <Eraser size={20} color={isEraserMode ? '#8B5CF6' : '#9CA3AF'} />
+            <Text style={[
+              styles.toolButtonText,
+              isEraserMode && styles.selectedToolText
+            ]}>
+              Eraser
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.toolGroup}>
+          <Text style={styles.toolLabel}>Brush Size</Text>
+          <View style={styles.brushSizes}>
+            {[2, 4, 6, 8].map((size) => (
+              <TouchableOpacity
+                key={size}
                 style={[
-                  styles.brushPreview,
-                  {
-                    width: size * 2,
-                    height: size * 2,
-                    backgroundColor: selectedColor
-                  }
+                  styles.brushButton,
+                  strokeWidth === size && styles.selectedBrush
                 ]}
-              />
-            </TouchableOpacity>
-          ))}
+                onPress={() => setStrokeWidth(size)}
+              >
+                <View
+                  style={[
+                    styles.brushPreview,
+                    {
+                      width: size * 2,
+                      height: size * 2,
+                      backgroundColor: isEraserMode ? '#9CA3AF' : selectedColor
+                    }
+                  ]}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -199,13 +275,13 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
         <TouchableOpacity
           style={[
             styles.completeButton,
-            paths.length === 0 && styles.completeButtonDisabled
+            !hasDrawing && styles.completeButtonDisabled
           ]}
           onPress={handleComplete}
-          disabled={paths.length === 0}
+          disabled={!hasDrawing}
         >
           <LinearGradient
-            colors={paths.length > 0 ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
+            colors={hasDrawing ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
             style={styles.completeButtonGradient}
           >
             <Check size={20} color="white" />
@@ -259,6 +335,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
   },
   svg: {
     borderRadius: 12,
@@ -284,17 +362,48 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'transparent',
   },
-  selectedColor: {
-    borderColor: 'white',
+  whiteColorBorder: {
+    borderColor: '#E5E7EB',
   },
-  brushSection: {
+  selectedColor: {
+    borderColor: '#8B5CF6',
+    borderWidth: 4,
+  },
+  toolsSection: {
     marginBottom: 20,
   },
-  brushLabel: {
+  toolGroup: {
+    marginBottom: 16,
+  },
+  toolLabel: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
+  },
+  toolButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedTool: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    borderColor: '#8B5CF6',
+  },
+  toolButtonText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  selectedToolText: {
+    color: '#8B5CF6',
   },
   brushSizes: {
     flexDirection: 'row',
