@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Star, CreditCard as Edit3, User } from 'lucide-react-native';
+import { Star, CreditCard as Edit3, Settings } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProgress } from '@/hooks/useUserProgress';
@@ -16,7 +16,7 @@ export default function XPTracker({ xp, currentMood, onMoodPress }: XPTrackerPro
   const { isSignedIn } = useAuth();
   const { progress } = useUserProgress();
 
-  const handleProfilePress = () => {
+  const handleSettingsPress = () => {
     if (isSignedIn) {
       router.push('/profile');
     } else {
@@ -54,14 +54,14 @@ export default function XPTracker({ xp, currentMood, onMoodPress }: XPTrackerPro
         </View>
         
         <TouchableOpacity 
-          style={styles.profileButton} 
-          onPress={handleProfilePress}
+          style={styles.settingsButton} 
+          onPress={handleSettingsPress}
         >
           <LinearGradient
             colors={['#8B5CF6', '#EC4899']}
-            style={styles.profileButtonGradient}
+            style={styles.settingsButtonGradient}
           >
-            <User size={20} color="white" />
+            <Settings size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -133,11 +133,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
   },
-  profileButton: {
+  settingsButton: {
     borderRadius: 20,
     overflow: 'hidden',
   },
-  profileButtonGradient: {
+  settingsButtonGradient: {
     width: 40,
     height: 40,
     alignItems: 'center',

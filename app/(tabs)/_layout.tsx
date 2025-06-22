@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Chrome as Home, User, Trophy, Sparkles } from 'lucide-react-native';
+import { Trophy, Sparkles, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -14,15 +14,6 @@ export default function TabLayout() {
         tabBarActiveTintColor: '#8B5CF6',
         tabBarInactiveTintColor: '#9CA3AF',
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Stories',
-          tabBarIcon: ({ size, color }) => (
-            <Home size={size} color={color} />
-          ),
-        }}
-      />
       <Tabs.Screen
         name="achievements"
         options={{
