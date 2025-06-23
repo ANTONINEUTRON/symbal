@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Sparkles, ArrowRight } from 'lucide-react-native';
 import { StorySegment, UserSubmission, AIJudgment } from '@/types';
@@ -127,7 +127,7 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
             </View>
           )}
 
-          {/* AI Judgment Results */}
+          {/* AI Judgment Results - Now Concise and Scrollable */}
           {showPostGameInfo && aiJudgment && (
             <View style={styles.postGameOverlay}>
               <View style={styles.postGameContainer}>
@@ -135,45 +135,56 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
                   colors={['#8B5CF6', '#EC4899', '#F59E0B']}
                   style={styles.postGameGradient}
                 >
-                  <View style={styles.postGameContent}>
-                    <View style={styles.postGameHeader}>
-                      <Text style={styles.scoreText}>Score: {aiJudgment.score}/10</Text>
-                      <Text style={styles.encouragementText}>{aiJudgment.encouragement}</Text>
+                  {/* Scrollable Content */}
+                  <ScrollView 
+                    style={styles.postGameScrollContent}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContentContainer}
+                  >
+                    {/* Score - Prominent Display */}
+                    <View style={styles.scoreSection}>
+                      <Text style={styles.scoreText}>{aiJudgment.score}/10</Text>
+                      <Text style={styles.scoreLabel}>Score</Text>
                     </View>
 
+                    {/* Combined Feedback - Concise */}
                     <View style={styles.feedbackSection}>
-                      <Text style={styles.feedbackTitle}>AI Feedback:</Text>
-                      <Text style={styles.feedbackText}>{aiJudgment.feedback}</Text>
+                      <Text style={styles.conciseFeedbackText}>
+                        {aiJudgment.feedback} {aiJudgment.encouragement}
+                      </Text>
                     </View>
 
+                    {/* What Stood Out */}
                     {aiJudgment.highlights && aiJudgment.highlights.length > 0 && (
                       <View style={styles.highlightsSection}>
-                        <Text style={styles.highlightsTitle}>✨ What stood out:</Text>
-                        {aiJudgment.highlights.map((highlight, index) => (
+                        <Text style={styles.sectionTitle}>✨ What stood out:</Text>
+                        {aiJudgment.highlights.slice(0, 3).map((highlight, index) => (
                           <Text key={index} style={styles.highlightItem}>• {highlight}</Text>
                         ))}
                       </View>
                     )}
 
+                    {/* For Next Time - Conditional */}
                     {aiJudgment.improvements && aiJudgment.improvements.length > 0 && (
                       <View style={styles.improvementsSection}>
-                        <Text style={styles.improvementsTitle}>💡 For next time:</Text>
-                        {aiJudgment.improvements.map((improvement, index) => (
+                        <Text style={styles.sectionTitle}>💡 For next time:</Text>
+                        {aiJudgment.improvements.slice(0, 2).map((improvement, index) => (
                           <Text key={index} style={styles.improvementItem}>• {improvement}</Text>
                         ))}
                       </View>
                     )}
+                  </ScrollView>
 
-                    <TouchableOpacity
-                      style={styles.continueButton}
-                      onPress={handleContinue}
-                    >
-                      <View style={styles.continueButtonContent}>
-                        <Text style={styles.continueButtonText}>Continue Journey</Text>
-                        <ArrowRight size={20} color="white" />
-                      </View>
-                    </TouchableOpacity>
-                  </View>
+                  {/* Continue Button - Fixed at Bottom */}
+                  <TouchableOpacity
+                    style={styles.continueButton}
+                    onPress={handleContinue}
+                  >
+                    <View style={styles.continueButtonContent}>
+                      <Text style={styles.continueButtonText}>Continue Journey</Text>
+                      <ArrowRight size={20} color="white" />
+                    </View>
+                  </TouchableOpacity>
                 </LinearGradient>
               </View>
             </View>
@@ -271,53 +282,53 @@ const styles = StyleSheet.create({
   },
   postGameContainer: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
+    maxHeight: '75%',
     borderRadius: 24,
     overflow: 'hidden',
-    maxHeight: '80%',
   },
   postGameGradient: {
-    padding: 24,
+    flex: 1,
+    padding: 20,
   },
-  postGameContent: {
-    alignItems: 'center',
+  postGameScrollContent: {
+    flex: 1,
   },
-  postGameHeader: {
+  scrollContentContainer: {
+    paddingBottom: 16,
+  },
+  scoreSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   scoreText: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: 'bold',
-    marginBottom: 8,
+    lineHeight: 40,
   },
-  encouragementText: {
-    color: 'white',
-    fontSize: 18,
-    textAlign: 'center',
-    lineHeight: 24,
+  scoreLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
   },
   feedbackSection: {
-    width: '100%',
     marginBottom: 20,
   },
-  feedbackTitle: {
+  conciseFeedbackText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  feedbackText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
+    textAlign: 'center',
   },
   highlightsSection: {
-    width: '100%',
     marginBottom: 16,
   },
-  highlightsTitle: {
+  improvementsSection: {
+    marginBottom: 8,
+  },
+  sectionTitle: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
@@ -329,16 +340,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 4,
   },
-  improvementsSection: {
-    width: '100%',
-    marginBottom: 24,
-  },
-  improvementsTitle: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
   improvementItem: {
     color: 'rgba(255, 255, 255, 0.9)',
     fontSize: 13,
@@ -349,13 +350,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 16,
   },
   continueButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   continueButtonText: {
