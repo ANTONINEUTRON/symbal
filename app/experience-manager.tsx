@@ -10,8 +10,10 @@ import {
   Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowLeft, Plus, CreditCard as Edit, Trash2, Play, Star, Clock, Users, Sparkles, Save, X, Image as ImageIcon, Palette } from 'lucide-react-native';
+import { ArrowLeft, Plus, CreditCard as Edit, Trash2, Play, Star, Clock, Users, Sparkles, Save, X, Image as ImageIcon, Palette, Crown, Lock } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 interface Experience {
   id: string;
@@ -27,6 +29,8 @@ interface Experience {
 }
 
 export default function ExperienceManagerScreen() {
+  const { user } = useAuth();
+  const { isPremium, premiumXpThreshold, progress } = useUserProgress();
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       id: '1',
@@ -63,6 +67,118 @@ export default function ExperienceManagerScreen() {
     estimatedTime: '',
     isPublic: true
   });
+
+  // Check if user has access to Experience Manager
+  if (!user) {
+    return (
+      <LinearGradient
+        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        style={styles.container}
+      >
+        <View style={styles.accessDeniedContainer}>
+          <Lock size={64} color="#8B5CF6" />
+          <Text style={styles.accessDeniedTitle}>Sign In Required</Text>
+          <Text style={styles.accessDeniedDescription}>
+            You need to be signed in to access the Experience Manager.
+          </Text>
+          <TouchableOpacity
+            style={styles.accessDeniedButton}
+            onPress={() => router.push('/auth')}
+          >
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              style={styles.accessDeniedButtonGradient}
+            >
+              <Text style={styles.accessDeniedButtonText}>Sign In</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
+    );
+  }
+
+  if (!isPremium) {
+    const currentSYM = progress?.xp || 0;
+    const neededSYM = premiumXpThreshold - currentSYM;
+
+    return (
+      <LinearGradient
+        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        style={styles.container}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Experience Manager</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.premiumRequiredContainer}>
+          <LinearGradient
+            colors={['#F59E0B', '#EF4444', '#EC4899']}
+            style={styles.premiumRequiredGradient}
+          >
+            <Crown size={64} color="white" />
+            <Text style={styles.premiumRequiredTitle}>Premium Feature</Text>
+            <Text style={styles.premiumRequiredDescription}>
+              Experience Manager is a premium feature that allows you to create and manage custom story experiences.
+            </Text>
+            
+            <View style={styles.premiumRequiredStats}>
+              <View style={styles.premiumStat}>
+                <Text style={styles.premiumStatLabel}>Your SYM</Text>
+                <Text style={styles.premiumStatValue}>{currentSYM.toLocaleString()}</Text>
+              </View>
+              <View style={styles.premiumStat}>
+                <Text style={styles.premiumStatLabel}>Required</Text>
+                <Text style={styles.premiumStatValue}>{premiumXpThreshold.toLocaleString()}</Text>
+              </View>
+              <View style={styles.premiumStat}>
+                <Text style={styles.premiumStatLabel}>Needed</Text>
+                <Text style={styles.premiumStatValue}>{neededSYM.toLocaleString()}</Text>
+              </View>
+            </View>
+
+            <View style={styles.premiumProgressContainer}>
+              <Text style={styles.premiumProgressLabel}>Progress to Premium</Text>
+              <View style={styles.premiumProgressBar}>
+                <View 
+                  style={[
+                    styles.premiumProgressFill,
+                    { width: `${Math.min((currentSYM / premiumXpThreshold) * 100, 100)}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.premiumProgressText}>
+                {Math.round((currentSYM / premiumXpThreshold) * 100)}% Complete
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.premiumUpgradeButton}
+              onPress={() => router.push('/premium')}
+            >
+              <View style={styles.premiumUpgradeButtonContent}>
+                <Crown size={20} color="white" />
+                <Text style={styles.premiumUpgradeButtonText}>Learn About Premium</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.continuePlayingButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.continuePlayingButtonText}>Continue Playing to Earn SYM</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </LinearGradient>
+    );
+  }
 
   const handleCreateNew = () => {
     setFormData({
@@ -391,6 +507,10 @@ export default function ExperienceManagerScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.introSection}>
+          <View style={styles.premiumBadgeContainer}>
+            <Crown size={24} color="#F59E0B" />
+            <Text style={styles.premiumBadgeText}>Premium Feature</Text>
+          </View>
           <Sparkles size={32} color="#8B5CF6" />
           <Text style={styles.introTitle}>Create & Manage Experiences</Text>
           <Text style={styles.introDescription}>
@@ -484,6 +604,9 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  headerSpacer: {
+    width: 40,
+  },
   createButton: {
     backgroundColor: 'rgba(139, 92, 246, 0.8)',
     borderRadius: 20,
@@ -496,9 +619,158 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
+  accessDeniedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  accessDeniedTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  accessDeniedDescription: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  accessDeniedButton: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  accessDeniedButtonGradient: {
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+  },
+  accessDeniedButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  premiumRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumRequiredGradient: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+  },
+  premiumRequiredTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumRequiredDescription: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  premiumRequiredStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 24,
+  },
+  premiumStat: {
+    alignItems: 'center',
+  },
+  premiumStatLabel: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  premiumStatValue: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  premiumProgressContainer: {
+    width: '100%',
+    marginBottom: 32,
+  },
+  premiumProgressLabel: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  premiumProgressBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 8,
+    height: 12,
+    marginBottom: 8,
+  },
+  premiumProgressFill: {
+    backgroundColor: 'white',
+    height: '100%',
+    borderRadius: 8,
+  },
+  premiumProgressText: {
+    color: 'white',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  premiumUpgradeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  premiumUpgradeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  premiumUpgradeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  continuePlayingButton: {
+    paddingVertical: 8,
+  },
+  continuePlayingButtonText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    textAlign: 'center',
+  },
   introSection: {
     alignItems: 'center',
     marginBottom: 32,
+  },
+  premiumBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 16,
+    gap: 6,
+  },
+  premiumBadgeText: {
+    color: '#F59E0B',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   introTitle: {
     color: 'white',

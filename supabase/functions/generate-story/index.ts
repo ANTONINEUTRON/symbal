@@ -102,7 +102,7 @@ Requirements:
 1. Create an engaging story title (max 6 words)
 2. Write a captivating story description (2-3 sentences, max 150 characters)
 3. Choose a task type: either "drawing" or "writing" (avoid recent types if provided)
-4. Suggest XP reward (20-50 based on complexity)
+4. Suggest XP reward (5-10 SYM maximum - this is strictly enforced)
 5. Create an educational post-game fact related to creativity
 
 For DRAWING tasks, provide:
@@ -122,6 +122,12 @@ The task should:
 - Be achievable within the time limit
 - Be unique and engaging
 
+IMPORTANT XP REWARD GUIDELINES:
+- XP rewards must be between 5-10 SYM only
+- This is the maximum allowed per game to maintain balance
+- Higher complexity tasks can award up to 10 SYM
+- Simple tasks should award 5-7 SYM
+
 IMPORTANT DRAWING PROMPT GUIDELINES:
 - Use only concrete nouns (car, house, tree, cat, book, cup, etc.)
 - Avoid adjectives like "magical", "beautiful", "mysterious"
@@ -138,7 +144,7 @@ Respond in this exact JSON format:
   "title": "Creative Task Title",
   "text": "Story description that connects to the user's mood and introduces the creative challenge.",
   "gameType": "drawing",
-  "xpReward": 30,
+  "xpReward": 8,
   "postGameFact": "🎨 Educational fact about creativity, art, or self-expression.",
   "drawingPrompt": "draw a car",
   "colorPalette": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"],
@@ -151,7 +157,7 @@ OR for writing tasks:
   "title": "Creative Writing Challenge",
   "text": "Story description that connects to the user's mood and introduces the writing challenge.",
   "gameType": "writing",
-  "xpReward": 25,
+  "xpReward": 7,
   "postGameFact": "✍️ Educational fact about writing, storytelling, or creativity.",
   "writingPrompt": "Write about your favorite place (at least 400 characters)",
   "wordLimit": 100,
@@ -171,12 +177,12 @@ OR for writing tasks:
 
     const generatedStory = JSON.parse(jsonMatch[0]);
 
-    // Validate and sanitize the response
+    // Validate and sanitize the response with strict XP capping
     const story: GeneratedStory = {
       title: generatedStory.title?.substring(0, 50) || 'Creative Challenge',
       text: generatedStory.text?.substring(0, 200) || `Your mood of "${context.mood}" inspires a creative task.`,
       gameType: GAME_TYPES.includes(generatedStory.gameType) ? generatedStory.gameType : getRandomGameType(context.lastTaskTypes),
-      xpReward: Math.max(20, Math.min(50, generatedStory.xpReward || 30)),
+      xpReward: Math.max(5, Math.min(10, generatedStory.xpReward || 8)), // Strict 5-10 SYM cap
       postGameFact: generatedStory.postGameFact?.substring(0, 300) || '🎨 Creative expression enhances mental well-being and cognitive flexibility!',
       timeLimit: Math.max(5, Math.min(30, generatedStory.timeLimit || 15))
     };
@@ -261,7 +267,7 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
     title: selectedTheme.title,
     text: selectedTheme.text,
     gameType,
-    xpReward: Math.floor(Math.random() * 30) + 20,
+    xpReward: Math.floor(Math.random() * 6) + 5, // 5-10 SYM range
     postGameFact: selectedTheme.fact,
     timeLimit: 15
   };

@@ -45,17 +45,17 @@ export function useAIStoryGeneration() {
       setError(errorMessage);
       console.error('Story generation error:', err);
       
-      // Return fallback story
+      // Return fallback story with capped XP
       return [{
         id: `fallback-${Date.now()}`,
         title: 'Creative Expression',
         text: `Your mood of "${mood}" inspires a new creative challenge.`,
         gameType: Math.random() > 0.5 ? 'drawing' : 'writing',
         imageUrl: 'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
-        xpReward: 25,
+        xpReward: Math.floor(Math.random() * 6) + 5, // 5-10 SYM range
         postGameFact: '🎨 Creative expression enhances mental well-being and cognitive flexibility!',
         drawingPrompt: `Draw something inspired by "${mood}"`,
-        writingPrompt: `Write about "${mood}" and what it means to you`,
+        writingPrompt: `Write about "${mood}" and what it means to you (at least 400 characters)`,
         wordLimit: 100,
         colorPalette: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
         timeLimit: 15,
@@ -101,17 +101,17 @@ export function useAIStoryGeneration() {
       setError(errorMessage);
       console.error('Multiple story generation error:', err);
       
-      // Return single fallback story
+      // Return single fallback story with capped XP
       return [{
         id: `fallback-${Date.now()}`,
         title: 'Creative Expression',
         text: `Your mood of "${mood}" inspires a new creative challenge.`,
         gameType: Math.random() > 0.5 ? 'drawing' : 'writing',
         imageUrl: 'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
-        xpReward: 25,
+        xpReward: Math.floor(Math.random() * 6) + 5, // 5-10 SYM range
         postGameFact: '🎨 Creative expression enhances mental well-being and cognitive flexibility!',
         drawingPrompt: `Draw something inspired by "${mood}"`,
-        writingPrompt: `Write about "${mood}" and what it means to you`,
+        writingPrompt: `Write about "${mood}" and what it means to you (at least 400 characters)`,
         wordLimit: 100,
         colorPalette: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
         timeLimit: 15,

@@ -7,19 +7,56 @@ type UserProgress = Database['public']['Tables']['user_progress']['Row'];
 type UserProgressInsert = Database['public']['Tables']['user_progress']['Insert'];
 type UserProgressUpdate = Database['public']['Tables']['user_progress']['Update'];
 
+interface AppSettings {
+  premium_xp_threshold: number;
+  max_xp_per_game: number;
+}
+
 export function useUserProgress() {
   const { user } = useAuth();
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [appSettings, setAppSettings] = useState<AppSettings>({
+    premium_xp_threshold: 75000, // Default fallback
+    max_xp_per_game: 10 // Default fallback
+  });
 
   useEffect(() => {
     if (user) {
       fetchProgress();
+      fetchAppSettings();
     } else {
       setProgress(null);
       setIsLoading(false);
     }
   }, [user]);
+
+  const fetchAppSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('app_settings')
+        .select('key, value')
+        .in('key', ['premium_xp_threshold', 'max_xp_per_game']);
+
+      if (error) {
+        console.error('Error fetching app settings:', error);
+        return;
+      }
+
+      const settings: Partial<AppSettings> = {};
+      data?.forEach(setting => {
+        if (setting.key === 'premium_xp_threshold') {
+          settings.premium_xp_threshold = Number(setting.value);
+        } else if (setting.key === 'max_xp_per_game') {
+          settings.max_xp_per_game = Number(setting.value);
+        }
+      });
+
+      setAppSettings(prev => ({ ...prev, ...settings }));
+    } catch (error) {
+      console.error('Error fetching app settings:', error);
+    }
+  };
 
   const fetchProgress = async () => {
     if (!user) return;
@@ -87,7 +124,9 @@ export function useUserProgress() {
   const addXP = async (xpAmount: number) => {
     if (!progress) return;
 
-    const newXP = progress.xp + xpAmount;
+    // Cap XP to maximum allowed per game
+    const cappedXP = Math.min(xpAmount, appSettings.max_xp_per_game);
+    const newXP = progress.xp + cappedXP;
     const newLevel = Math.floor(newXP / 100) + 1; // Level up every 100 XP
 
     return updateProgress({
@@ -113,7 +152,9 @@ export function useUserProgress() {
       }
     }
 
-    const newXP = progress.xp + xpReward;
+    // Cap XP to maximum allowed per game
+    const cappedXP = Math.min(xpReward, appSettings.max_xp_per_game);
+    const newXP = progress.xp + cappedXP;
     const newLevel = Math.floor(newXP / 100) + 1;
 
     return updateProgress({
@@ -143,14 +184,21 @@ export function useUserProgress() {
     });
   };
 
+  // Check if user is premium based on XP threshold from database
+  const isPremium = progress ? progress.xp >= appSettings.premium_xp_threshold : false;
+
   return {
     progress,
     isLoading,
+    isPremium,
+    premiumXpThreshold: appSettings.premium_xp_threshold,
+    maxXpPerGame: appSettings.max_xp_per_game,
     updateProgress,
     addXP,
     completeGame,
     updateMood,
     addAchievement,
     refetch: fetchProgress,
+    refreshSettings: fetchAppSettings,
   };
 }

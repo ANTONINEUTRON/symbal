@@ -19,7 +19,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const { user, signOut, isLoading } = useAuth();
-  const { progress } = useUserProgress();
+  const { progress, isPremium, premiumXpThreshold } = useUserProgress();
   const [activeTab, setActiveTab] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [voiceAssistanceEnabled, setVoiceAssistanceEnabled] = useState(false);
@@ -41,7 +41,7 @@ export default function ProfileScreen() {
     level: progress?.level || 1,
     gamesCompleted: progress?.completed_games?.length || 0,
     storiesUnlocked: 8, // This could be calculated based on progress
-    isPremium: false,
+    isPremium,
     achievements: mockAchievements
   };
 
@@ -55,10 +55,16 @@ export default function ProfileScreen() {
     },
     {
       icon: Crown,
-      title: 'Upgrade to Premium',
-      subtitle: 'Unlock exclusive features and stories',
-      type: 'premium',
-      onPress: () => router.push('/premium')
+      title: isPremium ? 'Premium Activated' : 'Upgrade to Premium',
+      subtitle: isPremium 
+        ? `You have ${userStats.xp.toLocaleString()} SYM - Premium features unlocked!`
+        : `Unlock premium features with ${premiumXpThreshold.toLocaleString()} SYM`,
+      type: isPremium ? 'premium-active' : 'premium',
+      onPress: () => {
+        if (!isPremium) {
+          router.push('/premium');
+        }
+      }
     },
     {
       icon: voiceAssistanceEnabled ? Mic : MicOff,
@@ -138,7 +144,18 @@ export default function ProfileScreen() {
   };
 
   const handleFabPress = () => {
-    router.push('/experience-manager');
+    if (isPremium) {
+      router.push('/experience-manager');
+    } else {
+      Alert.alert(
+        'Premium Feature',
+        `Experience Manager requires ${premiumXpThreshold.toLocaleString()} SYM. You currently have ${userStats.xp.toLocaleString()} SYM.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Learn More', onPress: () => router.push('/premium') }
+        ]
+      );
+    }
   };
 
   const handleSeeAllAchievements = () => {
@@ -166,7 +183,7 @@ export default function ProfileScreen() {
               {user.full_name.charAt(0).toUpperCase()}
             </Text>
           </LinearGradient>
-          {userStats.isPremium && (
+          {isPremium && (
             <View style={styles.premiumBadge}>
               <Crown size={16} color="#F59E0B" />
             </View>
@@ -176,7 +193,7 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{user.email}</Text>
         <View style={styles.levelContainer}>
           <Text style={styles.level}>Level {userStats.level}</Text>
-          {userStats.isPremium && (
+          {isPremium && (
             <View style={styles.premiumTag}>
               <Crown size={12} color="#F59E0B" />
               <Text style={styles.premiumText}>Premium</Text>
@@ -188,8 +205,8 @@ export default function ProfileScreen() {
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <Star size={24} color="#8B5CF6" />
-          <Text style={styles.statNumber}>{userStats.xp}</Text>
-          <Text style={styles.statLabel}>XP Earned</Text>
+          <Text style={styles.statNumber}>{userStats.xp.toLocaleString()}</Text>
+          <Text style={styles.statLabel}>SYM Earned</Text>
         </View>
         
         <View style={styles.statCard}>
@@ -204,6 +221,28 @@ export default function ProfileScreen() {
           <Text style={styles.statLabel}>Stories</Text>
         </View>
       </View>
+
+      {/* Premium Progress Bar */}
+      {!isPremium && (
+        <View style={styles.premiumProgressSection}>
+          <Text style={styles.premiumProgressTitle}>Progress to Premium</Text>
+          <View style={styles.premiumProgressBar}>
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              style={[
+                styles.premiumProgressFill, 
+                { width: `${Math.min((userStats.xp / premiumXpThreshold) * 100, 100)}%` }
+              ]}
+            />
+          </View>
+          <Text style={styles.premiumProgressText}>
+            {userStats.xp.toLocaleString()} / {premiumXpThreshold.toLocaleString()} SYM
+          </Text>
+          <Text style={styles.premiumProgressSubtext}>
+            {(premiumXpThreshold - userStats.xp).toLocaleString()} SYM needed for premium features
+          </Text>
+        </View>
+      )}
 
       <View style={styles.section}>
         <View style={styles.achievementHeader}>
@@ -276,22 +315,25 @@ export default function ProfileScreen() {
             style={[
               styles.settingsItem,
               item.type === 'danger' && styles.settingsItemDanger,
-              item.type === 'premium' && styles.settingsItemPremium
+              item.type === 'premium' && styles.settingsItemPremium,
+              item.type === 'premium-active' && styles.settingsItemPremiumActive
             ]}
             onPress={item.onPress}
-            disabled={item.type === 'toggle'}
+            disabled={item.type === 'toggle' || item.type === 'premium-active'}
           >
             <View style={styles.settingsItemLeft}>
               <View style={[
                 styles.settingsItemIcon,
                 item.type === 'danger' && styles.settingsItemIconDanger,
-                item.type === 'premium' && styles.settingsItemIconPremium
+                item.type === 'premium' && styles.settingsItemIconPremium,
+                item.type === 'premium-active' && styles.settingsItemIconPremiumActive
               ]}>
                 <item.icon 
                   size={20} 
                   color={
                     item.type === 'danger' ? '#EF4444' : 
-                    item.type === 'premium' ? '#F59E0B' : '#8B5CF6'
+                    item.type === 'premium' ? '#F59E0B' :
+                    item.type === 'premium-active' ? '#10B981' : '#8B5CF6'
                   } 
                 />
               </View>
@@ -299,7 +341,8 @@ export default function ProfileScreen() {
                 <Text style={[
                   styles.settingsItemTitle,
                   item.type === 'danger' && styles.settingsItemTitleDanger,
-                  item.type === 'premium' && styles.settingsItemTitlePremium
+                  item.type === 'premium' && styles.settingsItemTitlePremium,
+                  item.type === 'premium-active' && styles.settingsItemTitlePremiumActive
                 ]}>
                   {item.title}
                 </Text>
@@ -316,9 +359,9 @@ export default function ProfileScreen() {
               />
             )}
             
-            {item.type === 'premium' && (
+            {(item.type === 'premium' || item.type === 'premium-active') && (
               <View style={styles.premiumIndicator}>
-                <Crown size={16} color="#F59E0B" />
+                <Crown size={16} color={item.type === 'premium-active' ? '#10B981' : '#F59E0B'} />
               </View>
             )}
           </TouchableOpacity>
@@ -344,10 +387,14 @@ export default function ProfileScreen() {
           <Text style={styles.accountLabel}>Account Type</Text>
           <View style={styles.accountTypeContainer}>
             <Text style={styles.accountValue}>
-              {userStats.isPremium ? 'Premium' : 'Free'}
+              {isPremium ? 'Premium' : 'Free'}
             </Text>
-            {userStats.isPremium && <Crown size={16} color="#F59E0B" />}
+            {isPremium && <Crown size={16} color="#F59E0B" />}
           </View>
+        </View>
+        <View style={styles.accountInfo}>
+          <Text style={styles.accountLabel}>Total SYM</Text>
+          <Text style={styles.accountValue}>{userStats.xp.toLocaleString()}</Text>
         </View>
       </View>
 
@@ -410,7 +457,7 @@ export default function ProfileScreen() {
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={['#8B5CF6', '#EC4899', '#F59E0B']}
+          colors={isPremium ? ['#10B981', '#059669'] : ['#8B5CF6', '#EC4899', '#F59E0B']}
           style={styles.fabGradient}
         >
           <Sparkles size={24} color="white" />
@@ -563,7 +610,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     color: 'white',
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     marginTop: 8,
   },
@@ -571,6 +618,42 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 12,
     marginTop: 4,
+  },
+  premiumProgressSection: {
+    marginBottom: 32,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B5CF6',
+  },
+  premiumProgressTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  premiumProgressBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    height: 12,
+    marginBottom: 8,
+  },
+  premiumProgressFill: {
+    height: '100%',
+    borderRadius: 8,
+  },
+  premiumProgressText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  premiumProgressSubtext: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    textAlign: 'center',
   },
   section: {
     marginBottom: 32,
@@ -700,6 +783,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(245, 158, 11, 0.3)',
   },
+  settingsItemPremiumActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
   settingsItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -720,6 +808,9 @@ const styles = StyleSheet.create({
   settingsItemIconPremium: {
     backgroundColor: 'rgba(245, 158, 11, 0.2)',
   },
+  settingsItemIconPremiumActive: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+  },
   settingsItemContent: {
     flex: 1,
   },
@@ -734,6 +825,9 @@ const styles = StyleSheet.create({
   },
   settingsItemTitlePremium: {
     color: '#F59E0B',
+  },
+  settingsItemTitlePremiumActive: {
+    color: '#10B981',
   },
   settingsItemSubtitle: {
     color: '#9CA3AF',

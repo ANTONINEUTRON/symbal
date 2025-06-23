@@ -18,27 +18,32 @@ import {
   Shield,
   Sparkles,
   Check,
-  Gift
+  Gift,
+  ExternalLink
 } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function PremiumScreen() {
+  const { progress, isPremium, premiumXpThreshold } = useUserProgress();
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [isLoading, setIsLoading] = useState(false);
+
+  const currentSYM = progress?.xp || 0;
 
   const features = [
     {
       icon: Infinity,
-      title: 'Unlimited Stories',
-      description: 'Access to all premium story collections and unlimited gameplay',
+      title: 'Experience Manager',
+      description: 'Create and manage custom story experiences with unlimited creativity',
       color: '#8B5CF6'
     },
     {
       icon: Zap,
       title: 'Advanced Games',
-      description: 'Exclusive puzzle types and challenging mini-games',
+      description: 'Access to exclusive puzzle types and challenging mini-games',
       color: '#EC4899'
     },
     {
@@ -69,36 +74,54 @@ export default function PremiumScreen() {
 
   const plans = [
     {
-      id: 'monthly',
-      title: 'Monthly',
-      price: '$9.99',
-      period: '/month',
-      description: 'Perfect for trying premium features',
-      savings: null
+      id: 'sym_200k',
+      title: '200,000 SYM',
+      price: '$5.00',
+      period: 'one-time',
+      description: 'Perfect for unlocking premium features',
+      savings: null,
+      symAmount: 200000
     },
     {
-      id: 'yearly',
-      title: 'Yearly',
-      price: '$79.99',
-      period: '/year',
+      id: 'sym_3m',
+      title: '3,000,000 SYM',
+      price: '$50.00',
+      period: 'one-time',
       description: 'Best value for dedicated storytellers',
-      savings: 'Save 33%'
+      savings: 'Save 67%',
+      symAmount: 3000000
     }
   ];
 
-  const handleSubscribe = async () => {
+  const handlePurchase = async () => {
     setIsLoading(true);
+    
     try {
-      // Simulate subscription process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Show RevenueCat integration instructions
       Alert.alert(
-        'Welcome to Premium!',
-        'Your subscription has been activated. Enjoy unlimited access to all premium features!',
-        [{ text: 'Start Exploring', onPress: () => router.back() }]
+        'RevenueCat Integration Required',
+        'To implement mobile payments and subscriptions, you\'ll need to:\n\n' +
+        '1. Export your Expo project locally\n' +
+        '2. Install RevenueCat SDK\n' +
+        '3. Configure Apple App Store / Google Play billing\n' +
+        '4. Set up product IDs and entitlements\n\n' +
+        'RevenueCat handles all the complex billing logic for mobile apps.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Learn More', 
+            onPress: () => {
+              Alert.alert(
+                'RevenueCat Documentation',
+                'Visit the RevenueCat documentation for Expo integration:\n\nhttps://www.revenuecat.com/docs/getting-started/installation/expo\n\nNote: This requires native code and won\'t work in the browser preview.',
+                [{ text: 'OK' }]
+              );
+            }
+          }
+        ]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to process subscription. Please try again.');
+      Alert.alert('Error', 'Failed to process purchase. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -107,13 +130,71 @@ export default function PremiumScreen() {
   const handleRestorePurchases = () => {
     Alert.alert(
       'Restore Purchases',
-      'We\'ll check for any existing premium subscriptions linked to your account.',
+      'We\'ll check for any existing premium purchases linked to your account.',
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Restore', onPress: () => {} }
       ]
     );
   };
+
+  if (isPremium) {
+    return (
+      <LinearGradient
+        colors={['#0a0a0a', '#1a1a2e', '#16213e']}
+        style={styles.container}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Premium</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.premiumActiveContainer}>
+          <LinearGradient
+            colors={['#10B981', '#059669']}
+            style={styles.premiumActiveGradient}
+          >
+            <Crown size={64} color="white" />
+            <Text style={styles.premiumActiveTitle}>Premium Activated!</Text>
+            <Text style={styles.premiumActiveDescription}>
+              You have {currentSYM.toLocaleString()} SYM and access to all premium features.
+            </Text>
+            
+            <View style={styles.premiumActiveFeatures}>
+              <Text style={styles.premiumActiveFeaturesTitle}>✨ Your Premium Benefits:</Text>
+              <Text style={styles.premiumActiveFeature}>• Experience Manager unlocked</Text>
+              <Text style={styles.premiumActiveFeature}>• Create unlimited custom stories</Text>
+              <Text style={styles.premiumActiveFeature}>• Access to exclusive content</Text>
+              <Text style={styles.premiumActiveFeature}>• Priority support</Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.manageButton}
+              onPress={() => router.push('/experience-manager')}
+            >
+              <View style={styles.manageButtonContent}>
+                <Sparkles size={20} color="white" />
+                <Text style={styles.manageButtonText}>Open Experience Manager</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={() => router.back()}
+            >
+              <Text style={styles.continueButtonText}>Continue Creating</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -148,9 +229,42 @@ export default function PremiumScreen() {
           
           <Text style={styles.heroTitle}>Unlock Premium</Text>
           <Text style={styles.heroSubtitle}>
-            Experience the full power of Symbal with unlimited stories, 
+            Experience the full power of Symbal with the Experience Manager, 
             exclusive content, and premium features
           </Text>
+
+          {/* Current Progress */}
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressTitle}>Your Progress</Text>
+            <View style={styles.progressStats}>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>{currentSYM.toLocaleString()}</Text>
+                <Text style={styles.progressStatLabel}>Current SYM</Text>
+              </View>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>{premiumXpThreshold.toLocaleString()}</Text>
+                <Text style={styles.progressStatLabel}>Required</Text>
+              </View>
+              <View style={styles.progressStat}>
+                <Text style={styles.progressStatValue}>
+                  {Math.max(0, premiumXpThreshold - currentSYM).toLocaleString()}
+                </Text>
+                <Text style={styles.progressStatLabel}>Needed</Text>
+              </View>
+            </View>
+            <View style={styles.progressBar}>
+              <LinearGradient
+                colors={['#8B5CF6', '#EC4899']}
+                style={[
+                  styles.progressFill, 
+                  { width: `${Math.min((currentSYM / premiumXpThreshold) * 100, 100)}%` }
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {Math.round((currentSYM / premiumXpThreshold) * 100)}% to Premium
+            </Text>
+          </View>
         </View>
 
         {/* Features Grid */}
@@ -169,9 +283,12 @@ export default function PremiumScreen() {
           </View>
         </View>
 
-        {/* Pricing Plans */}
+        {/* SYM Purchase Options */}
         <View style={styles.pricingSection}>
-          <Text style={styles.sectionTitle}>Choose Your Plan</Text>
+          <Text style={styles.sectionTitle}>Purchase SYM</Text>
+          <Text style={styles.pricingSubtitle}>
+            Earn SYM through gameplay or purchase to unlock premium features instantly
+          </Text>
           
           <View style={styles.plansContainer}>
             {plans.map((plan) => (
@@ -202,15 +319,19 @@ export default function PremiumScreen() {
                 <View style={styles.planFeatures}>
                   <View style={styles.planFeature}>
                     <Check size={16} color="#10B981" />
-                    <Text style={styles.planFeatureText}>All premium features</Text>
+                    <Text style={styles.planFeatureText}>
+                      {plan.symAmount.toLocaleString()} SYM instantly
+                    </Text>
                   </View>
                   <View style={styles.planFeature}>
                     <Check size={16} color="#10B981" />
-                    <Text style={styles.planFeatureText}>Unlimited access</Text>
+                    <Text style={styles.planFeatureText}>
+                      {plan.symAmount >= premiumXpThreshold ? 'Premium features unlocked' : 'Progress toward premium'}
+                    </Text>
                   </View>
                   <View style={styles.planFeature}>
                     <Check size={16} color="#10B981" />
-                    <Text style={styles.planFeatureText}>Cancel anytime</Text>
+                    <Text style={styles.planFeatureText}>One-time purchase</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -218,15 +339,15 @@ export default function PremiumScreen() {
           </View>
         </View>
 
-        {/* Subscribe Button */}
+        {/* Purchase Button */}
         <TouchableOpacity
-          style={[styles.subscribeButton, isLoading && styles.subscribeButtonLoading]}
-          onPress={handleSubscribe}
+          style={[styles.purchaseButton, isLoading && styles.purchaseButtonLoading]}
+          onPress={handlePurchase}
           disabled={isLoading}
         >
           <LinearGradient
             colors={isLoading ? ['#6B7280', '#4B5563'] : ['#F59E0B', '#EF4444', '#EC4899']}
-            style={styles.subscribeButtonGradient}
+            style={styles.purchaseButtonGradient}
           >
             {isLoading ? (
               <View style={styles.loadingContainer}>
@@ -237,13 +358,28 @@ export default function PremiumScreen() {
             ) : (
               <>
                 <Crown size={20} color="white" />
-                <Text style={styles.subscribeButtonText}>
-                  Start Premium - {plans.find(p => p.id === selectedPlan)?.price}
+                <Text style={styles.purchaseButtonText}>
+                  Purchase {plans.find(p => p.id === selectedPlan)?.title} - {plans.find(p => p.id === selectedPlan)?.price}
                 </Text>
               </>
             )}
           </LinearGradient>
         </TouchableOpacity>
+
+        {/* Alternative: Earn SYM */}
+        <View style={styles.alternativeSection}>
+          <Text style={styles.alternativeTitle}>💡 Prefer to Earn SYM?</Text>
+          <Text style={styles.alternativeDescription}>
+            Continue playing creative tasks to earn up to 10 SYM per game. 
+            Complete {Math.ceil((premiumXpThreshold - currentSYM) / 10)} more games to unlock premium!
+          </Text>
+          <TouchableOpacity
+            style={styles.earnButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.earnButtonText}>Continue Playing</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -261,10 +397,12 @@ export default function PremiumScreen() {
             </TouchableOpacity>
           </View>
           
-          <Text style={styles.footerNote}>
-            Subscription automatically renews unless cancelled at least 24 hours before 
-            the end of the current period.
-          </Text>
+          <View style={styles.revenueCatNote}>
+            <ExternalLink size={16} color="#8B5CF6" />
+            <Text style={styles.revenueCatText}>
+              Mobile payments powered by RevenueCat
+            </Text>
+          </View>
         </View>
 
         <View style={styles.bottomSpacing} />
@@ -327,6 +465,56 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
+    marginBottom: 32,
+  },
+  progressContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#8B5CF6',
+  },
+  progressTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  progressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  progressStat: {
+    alignItems: 'center',
+  },
+  progressStatValue: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  progressStatLabel: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  progressBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 8,
+    height: 12,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 8,
+  },
+  progressText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   featuresSection: {
     marginBottom: 40,
@@ -374,6 +562,13 @@ const styles = StyleSheet.create({
   },
   pricingSection: {
     marginBottom: 32,
+  },
+  pricingSubtitle: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
   },
   plansContainer: {
     gap: 16,
@@ -444,24 +639,24 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
   },
-  subscribeButton: {
+  purchaseButton: {
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 32,
   },
-  subscribeButtonLoading: {
+  purchaseButtonLoading: {
     opacity: 0.8,
   },
-  subscribeButtonGradient: {
+  purchaseButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 18,
     paddingHorizontal: 32,
   },
-  subscribeButtonText: {
+  purchaseButtonText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
   },
@@ -482,6 +677,112 @@ const styles = StyleSheet.create({
   },
   loadingDotDelay2: {
     opacity: 1,
+  },
+  alternativeSection: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 32,
+    borderLeftWidth: 4,
+    borderLeftColor: '#10B981',
+  },
+  alternativeTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  alternativeDescription: {
+    color: '#E5E7EB',
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  earnButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignSelf: 'center',
+  },
+  earnButton: {
+    color: '#10B981',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  premiumActiveContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  premiumActiveGradient: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
+  },
+  premiumActiveTitle: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumActiveDescription: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  premiumActiveFeatures: {
+    width: '100%',
+    marginBottom: 32,
+  },
+  premiumActiveFeaturesTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumActiveFeature: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  manageButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  manageButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  manageButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  continueButton: {
+    paddingVertical: 8,
+  },
+  continueButtonText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    textAlign: 'center',
   },
   footer: {
     alignItems: 'center',
@@ -505,12 +806,19 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 14,
   },
-  footerNote: {
-    color: '#6B7280',
+  revenueCatNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  revenueCatText: {
+    color: '#8B5CF6',
     fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 16,
-    paddingHorizontal: 20,
+    fontWeight: '600',
   },
   bottomSpacing: {
     height: 40,
