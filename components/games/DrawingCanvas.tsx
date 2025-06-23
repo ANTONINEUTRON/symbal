@@ -1,6 +1,6 @@
 // components/games/DrawingCanvas.tsx
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Palette, RotateCcw, Check, Eraser } from 'lucide-react-native';
@@ -50,7 +50,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     onPanResponderGrant: (evt) => {
       const { locationX, locationY } = evt.nativeEvent;
       const newPath = `M${locationX},${locationY}`;
-      
+
       setCurrentDrawingPath({
         path: newPath,
         color: isEraserMode ? '#FFFFFF' : selectedColor,
@@ -61,7 +61,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
 
     onPanResponderMove: (evt) => {
       const { locationX, locationY } = evt.nativeEvent;
-      
+
       setCurrentDrawingPath(prev => {
         if (!prev) return null; // Should not happen if grant was called
         const newPath = `${prev.path} L${locationX},${locationY}`;
@@ -97,8 +97,8 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
 
     const svgPaths = allPaths.map((pathData) => {
       // Ensure pathData is not null/undefined here, though the state management should prevent it
-      if (!pathData) return ''; 
-      
+      if (!pathData) return '';
+
       if (pathData.isEraser) {
         return `<path d="${pathData.path}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
       }
@@ -124,150 +124,155 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
   const hasDrawing = paths.length > 0 || currentDrawingPath !== null;
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.prompt}>{prompt}</Text>
-        <View style={styles.timer}>
-          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, paddingVertical: 20 }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.prompt}>{prompt}</Text>
+          <View style={styles.timer}>
+            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Canvas */}
-      <View style={styles.canvasContainer}>
-        <View
-          style={[styles.canvas, { width: CANVAS_SIZE, height: CANVAS_SIZE }]}
-          {...panResponder.panHandlers}
-        >
-          <Svg width={CANVAS_SIZE} height={CANVAS_SIZE} style={styles.svg}>
-            {/* White background */}
-            <Path
-              d={`M0,0 L${CANVAS_SIZE},0 L${CANVAS_SIZE},${CANVAS_SIZE} L0,${CANVAS_SIZE} Z`}
-              fill="white"
-              stroke="none"
-            />
-            
-            {/* Completed paths */}
-            {paths.map((pathData, index) => (
-              <Path
-                key={index}
-                d={pathData.path}
-                stroke={pathData.isEraser ? 'white' : pathData.color}
-                strokeWidth={pathData.strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            ))}
-            
-            {/* Current path being drawn */}
-            {currentDrawingPath && (
-              <Path
-                d={currentDrawingPath.path}
-                stroke={currentDrawingPath.isEraser ? 'white' : currentDrawingPath.color}
-                strokeWidth={currentDrawingPath.strokeWidth}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            )}
-          </Svg>
-        </View>
-      </View>
-
-      {/* Color Palette */}
-      <View style={styles.colorPalette}>
-        <Text style={styles.paletteLabel}>Colors</Text>
-        <View style={styles.colorRow}>
-          {enhancedPalette.map((color, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.colorButton,
-                { backgroundColor: color },
-                color === '#FFFFFF' && styles.whiteColorBorder,
-                selectedColor === color && !isEraserMode && styles.selectedColor
-              ]}
-              onPress={() => handleColorSelect(color)}
-            />
-          ))}
-        </View>
-      </View>
-
-      {/* Tools Section */}
-      <View style={styles.toolsSection}>
-        <View style={styles.toolGroup}>
-          <Text style={styles.toolLabel}>Tools</Text>
-          <TouchableOpacity
-            style={[
-              styles.toolButton,
-              isEraserMode && styles.selectedTool
-            ]}
-            onPress={toggleEraser}
+        {/* Canvas */}
+        <View style={styles.canvasContainer}>
+          <View
+            style={[styles.canvas, { width: CANVAS_SIZE, height: CANVAS_SIZE }]}
+            {...panResponder.panHandlers}
           >
-            <Eraser size={20} color={isEraserMode ? '#8B5CF6' : '#9CA3AF'} />
-            <Text style={[
-              styles.toolButtonText,
-              isEraserMode && styles.selectedToolText
-            ]}>
-              Eraser
-            </Text>
-          </TouchableOpacity>
+            <Svg width={CANVAS_SIZE} height={CANVAS_SIZE} style={styles.svg}>
+              {/* White background */}
+              <Path
+                d={`M0,0 L${CANVAS_SIZE},0 L${CANVAS_SIZE},${CANVAS_SIZE} L0,${CANVAS_SIZE} Z`}
+                fill="white"
+                stroke="none"
+              />
+
+              {/* Completed paths */}
+              {paths.map((pathData, index) => (
+                <Path
+                  key={index}
+                  d={pathData.path}
+                  stroke={pathData.isEraser ? 'white' : pathData.color}
+                  strokeWidth={pathData.strokeWidth}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              ))}
+
+              {/* Current path being drawn */}
+              {currentDrawingPath && (
+                <Path
+                  d={currentDrawingPath.path}
+                  stroke={currentDrawingPath.isEraser ? 'white' : currentDrawingPath.color}
+                  strokeWidth={currentDrawingPath.strokeWidth}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </Svg>
+          </View>
         </View>
 
-        <View style={styles.toolGroup}>
-          <Text style={styles.toolLabel}>Brush Size</Text>
-          <View style={styles.brushSizes}>
-            {[2, 4, 6, 8].map((size) => (
+        {/* Color Palette */}
+        <View style={styles.colorPalette}>
+          <Text style={styles.paletteLabel}>Colors</Text>
+          <View style={styles.colorRow}>
+            {enhancedPalette.map((color, index) => (
               <TouchableOpacity
-                key={size}
+                key={index}
                 style={[
-                  styles.brushButton,
-                  strokeWidth === size && styles.selectedBrush
+                  styles.colorButton,
+                  { backgroundColor: color },
+                  color === '#FFFFFF' && styles.whiteColorBorder,
+                  selectedColor === color && !isEraserMode && styles.selectedColor
                 ]}
-                onPress={() => setStrokeWidth(size)}
-              >
-                <View
-                  style={[
-                    styles.brushPreview,
-                    {
-                      width: size * 2,
-                      height: size * 2,
-                      backgroundColor: isEraserMode ? '#9CA3AF' : selectedColor
-                    }
-                  ]}
-                />
-              </TouchableOpacity>
+                onPress={() => handleColorSelect(color)}
+              />
             ))}
           </View>
         </View>
-      </View>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.clearButton} onPress={clearCanvas}>
-          <RotateCcw size={20} color="#EF4444" />
-          <Text style={styles.clearButtonText}>Clear</Text>
-        </TouchableOpacity>
+        {/* Tools Section */}
+        <View style={styles.toolsSection}>
+          <View style={styles.toolGroup}>
+            <Text style={styles.toolLabel}>Tools</Text>
+            <TouchableOpacity
+              style={[
+                styles.toolButton,
+                isEraserMode && styles.selectedTool
+              ]}
+              onPress={toggleEraser}
+            >
+              <Eraser size={20} color={isEraserMode ? '#8B5CF6' : '#9CA3AF'} />
+              <Text style={[
+                styles.toolButtonText,
+                isEraserMode && styles.selectedToolText
+              ]}>
+                Eraser
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity
-          style={[
-            styles.completeButton,
-            !hasDrawing && styles.completeButtonDisabled
-          ]}
-          onPress={handleComplete}
-          disabled={!hasDrawing}
-        >
-          <LinearGradient
-            colors={hasDrawing ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
-            style={styles.completeButtonGradient}
+          <View style={styles.toolGroup}>
+            <Text style={styles.toolLabel}>Brush Size</Text>
+            <View style={styles.brushSizes}>
+              {[2, 4, 6, 8].map((size) => (
+                <TouchableOpacity
+                  key={size}
+                  style={[
+                    styles.brushButton,
+                    strokeWidth === size && styles.selectedBrush
+                  ]}
+                  onPress={() => setStrokeWidth(size)}
+                >
+                  <View
+                    style={[
+                      styles.brushPreview,
+                      {
+                        width: size * 2,
+                        height: size * 2,
+                        backgroundColor: isEraserMode ? '#9CA3AF' : selectedColor
+                      }
+                    ]}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.clearButton} onPress={clearCanvas}>
+            <RotateCcw size={20} color="#EF4444" />
+            <Text style={styles.clearButtonText}>Clear</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.completeButton,
+              !hasDrawing && styles.completeButtonDisabled
+            ]}
+            onPress={handleComplete}
+            disabled={!hasDrawing}
           >
-            <Check size={20} color="white" />
-            <Text style={styles.completeButtonText}>Complete Drawing</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={hasDrawing ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
+              style={styles.completeButtonGradient}
+            >
+              <Check size={20} color="white" />
+              <Text style={styles.completeButtonText}>Complete Drawing</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
