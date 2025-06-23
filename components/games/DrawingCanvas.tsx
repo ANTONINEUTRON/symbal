@@ -1,3 +1,4 @@
+// components/games/DrawingCanvas.tsx
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,15 +24,11 @@ interface PathData {
 
 export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onComplete }: DrawingCanvasProps) {
   const [paths, setPaths] = useState<PathData[]>([]);
-  const [currentPath, setCurrentPath] = useState('');
-  const [selectedColor, setSelectedColor] = useState('#000000'); // Default to black
+  const [currentDrawingPath, setCurrentDrawingPath] = useState<PathData | null>(null); // New state for current path object
+  const [selectedColor, setSelectedColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(3);
-  const [timeLeft, setTimeLeft] = useState(timeLimit * 60); // Convert to seconds
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(timeLimit * 60);
   const [isEraserMode, setIsEraserMode] = useState(false);
-
-  const pathRef = useRef('');
-  const currentPathData = useRef<PathData | null>(null);
 
   // Enhanced color palette with black and white
   const enhancedPalette = ['#000000', '#FFFFFF', ...colorPalette];
@@ -53,48 +50,36 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     onPanResponderGrant: (evt) => {
       const { locationX, locationY } = evt.nativeEvent;
       const newPath = `M${locationX},${locationY}`;
-      pathRef.current = newPath;
-      setCurrentPath(newPath);
-      setIsDrawing(true);
-
-      // Create current path data
-      currentPathData.current = {
+      
+      setCurrentDrawingPath({
         path: newPath,
         color: isEraserMode ? '#FFFFFF' : selectedColor,
         strokeWidth: isEraserMode ? strokeWidth * 2 : strokeWidth,
         isEraser: isEraserMode
-      };
+      });
     },
 
     onPanResponderMove: (evt) => {
       const { locationX, locationY } = evt.nativeEvent;
-      const newPath = `${pathRef.current} L${locationX},${locationY}`;
-      pathRef.current = newPath;
-      setCurrentPath(newPath);
-
-      // Update current path data
-      if (currentPathData.current) {
-        currentPathData.current.path = newPath;
-      }
+      
+      setCurrentDrawingPath(prev => {
+        if (!prev) return null; // Should not happen if grant was called
+        const newPath = `${prev.path} L${locationX},${locationY}`;
+        return { ...prev, path: newPath };
+      });
     },
 
     onPanResponderRelease: () => {
-      if (pathRef.current && currentPathData.current) {
-        // Add the completed path to the paths array
-        setPaths(prev => [...prev, currentPathData.current!]);
-        setCurrentPath('');
-        pathRef.current = '';
-        currentPathData.current = null;
+      if (currentDrawingPath) {
+        setPaths(prev => [...prev, currentDrawingPath]);
+        setCurrentDrawingPath(null); // Clear current drawing path after adding to completed paths
       }
-      setIsDrawing(false);
     },
   });
 
   const clearCanvas = () => {
     setPaths([]);
-    setCurrentPath('');
-    pathRef.current = '';
-    currentPathData.current = null;
+    setCurrentDrawingPath(null);
   };
 
   const toggleEraser = () => {
@@ -108,29 +93,22 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
 
   const handleComplete = () => {
     // Convert drawing to SVG string
-    const svgPaths = paths.map((pathData, index) => {
+    const allPaths = currentDrawingPath ? [...paths, currentDrawingPath] : paths;
+
+    const svgPaths = allPaths.map((pathData) => {
+      // Ensure pathData is not null/undefined here, though the state management should prevent it
+      if (!pathData) return ''; 
+      
       if (pathData.isEraser) {
         return `<path d="${pathData.path}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
       }
       return `<path d="${pathData.path}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
     }).join('\n');
 
-    // Include current path if drawing
-    let currentPathSvg = '';
-    if (currentPath && currentPathData.current) {
-      const pathData = currentPathData.current;
-      if (pathData.isEraser) {
-        currentPathSvg = `<path d="${currentPath}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
-      } else {
-        currentPathSvg = `<path d="${currentPath}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
-      }
-    }
-
     const svgString = `
       <svg width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="white"/>
         ${svgPaths}
-        ${currentPathSvg}
       </svg>
     `;
 
@@ -143,7 +121,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const hasDrawing = paths.length > 0 || currentPath.length > 0;
+  const hasDrawing = paths.length > 0 || currentDrawingPath !== null;
 
   return (
     <View style={styles.container}>
@@ -183,11 +161,11 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
             ))}
             
             {/* Current path being drawn */}
-            {currentPath && currentPathData.current && (
+            {currentDrawingPath && (
               <Path
-                d={currentPath}
-                stroke={currentPathData.current.isEraser ? 'white' : currentPathData.current.color}
-                strokeWidth={currentPathData.current.strokeWidth}
+                d={currentDrawingPath.path}
+                stroke={currentDrawingPath.isEraser ? 'white' : currentDrawingPath.color}
+                strokeWidth={currentDrawingPath.strokeWidth}
                 fill="none"
                 strokeLinecap="round"
                 strokeLinejoin="round"
