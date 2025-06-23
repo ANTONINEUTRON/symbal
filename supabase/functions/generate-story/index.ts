@@ -106,13 +106,13 @@ Requirements:
 5. Create an educational post-game fact related to creativity
 
 For DRAWING tasks, provide:
-- drawingPrompt: Clear, inspiring drawing instruction
+- drawingPrompt: A simple, straightforward instruction to draw a concrete noun or object (e.g., "draw a car", "draw a pot", "draw a tree"). Avoid adjectives or complex scenarios. Use only concrete, everyday objects that are easy to recognize and draw.
 - colorPalette: Array of 6 hex colors
 - timeLimit: 10-20 minutes
 
 For WRITING tasks, provide:
-- writingPrompt: Creative writing instruction
-- wordLimit: 50-200 words
+- writingPrompt: A creative writing instruction. The user should be asked to write a response that is not less than 400 characters. Make this clear in the prompt.
+- wordLimit: 80-150 words (approximately equivalent to 400+ characters)
 - timeLimit: 10-15 minutes
 
 The task should:
@@ -122,6 +122,17 @@ The task should:
 - Be achievable within the time limit
 - Be unique and engaging
 
+IMPORTANT DRAWING PROMPT GUIDELINES:
+- Use only concrete nouns (car, house, tree, cat, book, cup, etc.)
+- Avoid adjectives like "magical", "beautiful", "mysterious"
+- Keep it simple: "draw a [noun]"
+- Examples: "draw a bicycle", "draw a flower", "draw a sandwich"
+
+IMPORTANT WRITING PROMPT GUIDELINES:
+- Clearly state the minimum character requirement (400 characters)
+- Make the writing task engaging but achievable
+- Examples: "Write about your favorite memory (at least 400 characters)", "Describe a perfect day (minimum 400 characters)"
+
 Respond in this exact JSON format:
 {
   "title": "Creative Task Title",
@@ -129,7 +140,7 @@ Respond in this exact JSON format:
   "gameType": "drawing",
   "xpReward": 30,
   "postGameFact": "🎨 Educational fact about creativity, art, or self-expression.",
-  "drawingPrompt": "Draw something specific and inspiring...",
+  "drawingPrompt": "draw a car",
   "colorPalette": ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7", "#DDA0DD"],
   "timeLimit": 15
 }
@@ -142,7 +153,7 @@ OR for writing tasks:
   "gameType": "writing",
   "xpReward": 25,
   "postGameFact": "✍️ Educational fact about writing, storytelling, or creativity.",
-  "writingPrompt": "Write about something specific and meaningful...",
+  "writingPrompt": "Write about your favorite place (at least 400 characters)",
   "wordLimit": 100,
   "timeLimit": 12
 }
@@ -170,15 +181,31 @@ OR for writing tasks:
       timeLimit: Math.max(5, Math.min(30, generatedStory.timeLimit || 15))
     };
 
-    // Add task-specific properties
+    // Add task-specific properties with enhanced validation
     if (story.gameType === 'drawing') {
-      story.drawingPrompt = generatedStory.drawingPrompt?.substring(0, 200) || `Draw something inspired by "${context.mood}"`;
+      // Ensure drawing prompt is simple and concrete
+      let drawingPrompt = generatedStory.drawingPrompt?.substring(0, 200) || `draw a house`;
+      
+      // Basic validation to ensure it starts with "draw a/an" and is simple
+      if (!drawingPrompt.toLowerCase().startsWith('draw a') && !drawingPrompt.toLowerCase().startsWith('draw an')) {
+        drawingPrompt = `draw a ${drawingPrompt.replace(/^draw\s*/i, '').toLowerCase()}`;
+      }
+      
+      story.drawingPrompt = drawingPrompt;
       story.colorPalette = Array.isArray(generatedStory.colorPalette) && generatedStory.colorPalette.length === 6
         ? generatedStory.colorPalette
         : getRandomColorPalette();
     } else if (story.gameType === 'writing') {
-      story.writingPrompt = generatedStory.writingPrompt?.substring(0, 200) || `Write about "${context.mood}" and what it means to you`;
-      story.wordLimit = Math.max(30, Math.min(300, generatedStory.wordLimit || 100));
+      // Ensure writing prompt mentions character requirement
+      let writingPrompt = generatedStory.writingPrompt?.substring(0, 200) || `Write about something that makes you happy (at least 400 characters)`;
+      
+      // Add character requirement if not present
+      if (!writingPrompt.includes('400 characters') && !writingPrompt.includes('at least 400')) {
+        writingPrompt += ' (at least 400 characters)';
+      }
+      
+      story.writingPrompt = writingPrompt;
+      story.wordLimit = Math.max(80, Math.min(150, generatedStory.wordLimit || 100));
     }
 
     return story;
@@ -226,6 +253,10 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
 
   const gameType = getRandomGameType(context.lastTaskTypes);
 
+  // Simple concrete objects for drawing fallbacks
+  const simpleObjects = ['car', 'tree', 'house', 'cat', 'book', 'cup', 'flower', 'bird', 'chair', 'apple'];
+  const randomObject = simpleObjects[Math.floor(Math.random() * simpleObjects.length)];
+
   const baseStory = {
     title: selectedTheme.title,
     text: selectedTheme.text,
@@ -238,13 +269,13 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
   if (gameType === 'drawing') {
     return {
       ...baseStory,
-      drawingPrompt: `Draw something inspired by "${context.mood}" - let your imagination flow!`,
+      drawingPrompt: `draw a ${randomObject}`,
       colorPalette: getRandomColorPalette()
     };
   } else {
     return {
       ...baseStory,
-      writingPrompt: `Write a short story or poem inspired by "${context.mood}". Express your creativity!`,
+      writingPrompt: `Write about something that makes you feel "${context.mood}" (at least 400 characters)`,
       wordLimit: 100
     };
   }
