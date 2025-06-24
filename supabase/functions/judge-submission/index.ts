@@ -33,6 +33,18 @@ interface AIJudgment {
   highlights?: string[];
 }
 
+function isBase64Image(content: string): boolean {
+  return content.startsWith('data:image/') && content.includes('base64,');
+}
+
+function extractBase64Data(dataUrl: string): string {
+  const base64Index = dataUrl.indexOf('base64,');
+  if (base64Index === -1) {
+    throw new Error('Invalid base64 data URL');
+  }
+  return dataUrl.substring(base64Index + 7);
+}
+
 async function judgeSubmissionWithAI(submission: UserSubmission, originalTask: StorySegment): Promise<AIJudgment> {
   try {
     const apiKey = Deno.env.get('GEMINI_API_KEY');
@@ -41,13 +53,70 @@ async function judgeSubmissionWithAI(submission: UserSubmission, originalTask: S
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const taskPrompt = submission.type === 'drawing' 
       ? originalTask.drawingPrompt 
       : originalTask.writingPrompt;
 
-    const prompt = `
+    let prompt: string;
+    let parts: any[];
+
+    if (submission.type === 'drawing' && isBase64Image(submission.content)) {
+      // Handle image submission for drawing tasks
+      const base64Data = extractBase64Data(submission.content);
+      
+      prompt = `
+You are a friendly, encouraging AI judge for a creative app called Symbal. Your role is to provide playful, supportive feedback on user drawings.
+
+TASK DETAILS:
+- Type: Drawing Task
+- Original Prompt: "${taskPrompt}"
+- Task Title: "${originalTask.title}"
+- Task Description: "${originalTask.text}"
+
+USER SUBMISSION:
+The user has submitted a drawing in response to the prompt. Please analyze the image and provide feedback.
+
+JUDGING GUIDELINES:
+1. Be encouraging and positive - this is about creativity, not artistic perfection
+2. Use a playful, friendly tone with emojis
+3. Connect your feedback to the original drawing prompt
+4. Score between 7-10 (everyone deserves encouragement!)
+5. Highlight what the user did well in their drawing
+6. Comment on creativity, effort, interpretation of the prompt
+7. Be supportive regardless of artistic skill level
+8. Make the user feel proud of their creative expression
+
+For DRAWING analysis, consider:
+- How well the drawing relates to the prompt
+- Creative interpretation and artistic choices
+- Use of colors, shapes, and composition
+- Effort and creativity shown
+- Unique elements or personal style
+
+Respond in this exact JSON format:
+{
+  "score": 8,
+  "feedback": "Your drawing beautifully captures the essence of the prompt! I love how you interpreted '${taskPrompt}' with such creativity...",
+  "encouragement": "🎨 What a wonderful artistic expression! Your imagination really shines through!",
+  "highlights": ["Creative interpretation", "Good use of colors", "Unique artistic style"],
+  "improvements": ["Optional gentle suggestion if appropriate"]
+}
+`;
+
+      parts = [
+        { text: prompt },
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: base64Data
+          }
+        }
+      ];
+    } else {
+      // Handle text submission (writing tasks or fallback for drawing)
+      prompt = `
 You are a friendly, encouraging AI judge for a creative app called Symbal. Your role is to provide playful, supportive feedback on user submissions.
 
 TASK DETAILS:
@@ -57,7 +126,7 @@ TASK DETAILS:
 - Task Description: "${originalTask.text}"
 
 USER SUBMISSION:
-${submission.type === 'writing' ? `Text: "${submission.content}"` : 'Drawing: [User submitted a drawing]'}
+${submission.type === 'writing' ? `Text: "${submission.content}"` : 'Drawing: [User submitted drawing data]'}
 
 JUDGING GUIDELINES:
 1. Be encouraging and positive - this is about creativity, not perfection
@@ -88,7 +157,10 @@ Respond in this exact JSON format:
 }
 `;
 
-    const result = await model.generateContent(prompt);
+      parts = [{ text: prompt }];
+    }
+
+    const result = await model.generateContent(parts);
     const response = await result.response;
     const text = response.text();
 

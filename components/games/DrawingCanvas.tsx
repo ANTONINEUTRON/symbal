@@ -1,9 +1,11 @@
 // components/games/DrawingCanvas.tsx
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, PanResponder, ScrollView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { Palette, RotateCcw, Check, Eraser } from 'lucide-react-native';
+import * as FileSystem from 'expo-file-system';
+import { captureRef } from 'react-native-view-shot';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CANVAS_SIZE = SCREEN_WIDTH - 40;
@@ -24,11 +26,15 @@ interface PathData {
 
 export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onComplete }: DrawingCanvasProps) {
   const [paths, setPaths] = useState<PathData[]>([]);
-  const [currentDrawingPath, setCurrentDrawingPath] = useState<PathData | null>(null); // New state for current path object
+  const [currentDrawingPath, setCurrentDrawingPath] = useState<PathData | null>(null);
   const [selectedColor, setSelectedColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [timeLeft, setTimeLeft] = useState(timeLimit * 60);
   const [isEraserMode, setIsEraserMode] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  // Ref for the canvas container to capture as image
+  const canvasRef = useRef<View>(null);
 
   // Enhanced color palette with black and white
   const enhancedPalette = ['#000000', '#FFFFFF', ...colorPalette];
@@ -63,7 +69,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
       const { locationX, locationY } = evt.nativeEvent;
 
       setCurrentDrawingPath(prev => {
-        if (!prev) return null; // Should not happen if grant was called
+        if (!prev) return null;
         const newPath = `${prev.path} L${locationX},${locationY}`;
         return { ...prev, path: newPath };
       });
@@ -72,7 +78,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
     onPanResponderRelease: () => {
       if (currentDrawingPath) {
         setPaths(prev => [...prev, currentDrawingPath]);
-        setCurrentDrawingPath(null); // Clear current drawing path after adding to completed paths
+        setCurrentDrawingPath(null);
       }
     },
   });
@@ -88,31 +94,101 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
 
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
-    setIsEraserMode(false); // Exit eraser mode when selecting a color
+    setIsEraserMode(false);
   };
 
-  const handleComplete = () => {
-    // Convert drawing to SVG string
-    const allPaths = currentDrawingPath ? [...paths, currentDrawingPath] : paths;
+  const captureDrawingAsImage = async (): Promise<string> => {
+    try {
+      setIsCapturing(true);
 
-    const svgPaths = allPaths.map((pathData) => {
-      // Ensure pathData is not null/undefined here, though the state management should prevent it
-      if (!pathData) return '';
+      if (Platform.OS === 'web') {
+        // Web implementation: Convert SVG to canvas and then to base64
+        const allPaths = currentDrawingPath ? [...paths, currentDrawingPath] : paths;
+        
+        // Create a canvas element
+        const canvas = document.createElement('canvas');
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          throw new Error('Could not get canvas context');
+        }
 
-      if (pathData.isEraser) {
-        return `<path d="${pathData.path}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+        // Fill with white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        // Draw each path
+        allPaths.forEach((pathData) => {
+          if (!pathData) return;
+
+          ctx.strokeStyle = pathData.isEraser ? 'white' : pathData.color;
+          ctx.lineWidth = pathData.strokeWidth;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          // Parse the SVG path and draw it
+          const pathCommands = pathData.path.split(/(?=[ML])/);
+          ctx.beginPath();
+
+          pathCommands.forEach((command) => {
+            const trimmed = command.trim();
+            if (trimmed.startsWith('M')) {
+              const coords = trimmed.substring(1).split(',');
+              ctx.moveTo(parseFloat(coords[0]), parseFloat(coords[1]));
+            } else if (trimmed.startsWith('L')) {
+              const coords = trimmed.substring(1).split(',');
+              ctx.lineTo(parseFloat(coords[0]), parseFloat(coords[1]));
+            }
+          });
+
+          ctx.stroke();
+        });
+
+        // Convert canvas to base64
+        return canvas.toDataURL('image/png');
+      } else {
+        // Native implementation using react-native-view-shot
+        if (!canvasRef.current) {
+          throw new Error('Canvas ref not available');
+        }
+
+        const uri = await captureRef(canvasRef.current, {
+          format: 'png',
+          quality: 0.8,
+          result: 'base64',
+        });
+
+        return `data:image/png;base64,${uri}`;
       }
-      return `<path d="${pathData.path}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
-    }).join('\n');
+    } catch (error) {
+      console.error('Error capturing drawing:', error);
+      
+      // Fallback: return SVG string as before
+      const allPaths = currentDrawingPath ? [...paths, currentDrawingPath] : paths;
+      const svgPaths = allPaths.map((pathData) => {
+        if (!pathData) return '';
+        if (pathData.isEraser) {
+          return `<path d="${pathData.path}" stroke="white" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+        }
+        return `<path d="${pathData.path}" stroke="${pathData.color}" stroke-width="${pathData.strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+      }).join('\n');
 
-    const svgString = `
-      <svg width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="white"/>
-        ${svgPaths}
-      </svg>
-    `;
+      return `
+        <svg width="${CANVAS_SIZE}" height="${CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="white"/>
+          ${svgPaths}
+        </svg>
+      `.trim();
+    } finally {
+      setIsCapturing(false);
+    }
+  };
 
-    onComplete(svgString.trim());
+  const handleComplete = async () => {
+    const drawingData = await captureDrawingAsImage();
+    onComplete(drawingData);
   };
 
   const formatTime = (seconds: number) => {
@@ -140,6 +216,7 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
         {/* Canvas */}
         <View style={styles.canvasContainer}>
           <View
+            ref={canvasRef}
             style={[styles.canvas, { width: CANVAS_SIZE, height: CANVAS_SIZE }]}
             {...panResponder.panHandlers}
           >
@@ -257,17 +334,30 @@ export default function DrawingCanvas({ prompt, colorPalette, timeLimit, onCompl
           <TouchableOpacity
             style={[
               styles.completeButton,
-              !hasDrawing && styles.completeButtonDisabled
+              (!hasDrawing || isCapturing) && styles.completeButtonDisabled
             ]}
             onPress={handleComplete}
-            disabled={!hasDrawing}
+            disabled={!hasDrawing || isCapturing}
           >
             <LinearGradient
-              colors={hasDrawing ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
+              colors={hasDrawing && !isCapturing ? ['#10B981', '#059669'] : ['#6B7280', '#4B5563']}
               style={styles.completeButtonGradient}
             >
-              <Check size={20} color="white" />
-              <Text style={styles.completeButtonText}>Complete Drawing</Text>
+              {isCapturing ? (
+                <>
+                  <View style={styles.loadingDots}>
+                    <View style={styles.loadingDot} />
+                    <View style={[styles.loadingDot, styles.loadingDotDelay1]} />
+                    <View style={[styles.loadingDot, styles.loadingDotDelay2]} />
+                  </View>
+                  <Text style={styles.completeButtonText}>Capturing...</Text>
+                </>
+              ) : (
+                <>
+                  <Check size={20} color="white" />
+                  <Text style={styles.completeButtonText}>Complete Drawing</Text>
+                </>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -448,5 +538,23 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontFamily: 'Quicksand-Bold',
+  },
+  loadingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'white',
+    marginHorizontal: 2,
+    opacity: 0.4,
+  },
+  loadingDotDelay1: {
+    opacity: 0.7,
+  },
+  loadingDotDelay2: {
+    opacity: 1,
   },
 });
