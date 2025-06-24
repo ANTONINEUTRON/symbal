@@ -10,27 +10,33 @@ export default function OnboardingScreen() {
       colors={['#1a1a2e', '#16213e', '#0f3460']}
       style={styles.container}
     >
+      {/* Bolt Badge */}
+      <Image 
+        source={require('../assets/images/bolt_icon.png')} 
+        style={styles.badgeImage} 
+      />
+
       <View style={styles.content}>
         <View style={styles.header}>
           <Star size={60} color="#8B5CF6" />
           <Text style={styles.title}>Welcome to Symbal</Text>
           <Text style={styles.subtitle}>
-            Where your thoughts shape reality and every story becomes an adventure
+            Where AI-powered creativity meets personalized storytelling. Transform your thoughts into interactive adventures with drawing and writing challenges.
           </Text>
         </View>
 
         <View style={styles.features}>
           <View style={styles.feature}>
             <Zap size={32} color="#EC4899" />
-            <Text style={styles.featureText}>Interactive story games</Text>
+            <Text style={styles.featureText}>AI-Generated Stories & Creative Tasks</Text>
           </View>
           <View style={styles.feature}>
             <Play size={32} color="#3B82F6" />
-            <Text style={styles.featureText}>Swipe-based navigation</Text>
+            <Text style={styles.featureText}>Interactive Drawing & Writing Challenges</Text>
           </View>
           <View style={styles.feature}>
             <Star size={32} color="#10B981" />
-            <Text style={styles.featureText}>Earn XP and grow</Text>
+            <Text style={styles.featureText}>Earn SYM, Unlock Premium Features</Text>
           </View>
         </View>
 
@@ -47,7 +53,7 @@ export default function OnboardingScreen() {
             colors={['#8B5CF6', '#EC4899']}
             style={styles.buttonGradient}
           >
-            <Text style={styles.buttonText}>Begin Your Journey</Text>
+            <Text style={styles.buttonText}>Begin Your Creative Journey</Text>
             <Play size={20} color="white" />
           </LinearGradient>
         </TouchableOpacity>
@@ -59,6 +65,20 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  badgeImage: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 10,
   },
   content: {
     flex: 1,
@@ -84,20 +104,25 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 24,
+    paddingHorizontal: 8,
   },
   features: {
     marginBottom: 40,
+    width: '100%',
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 8,
   },
   featureText: {
     color: 'white',
     fontSize: 16,
     fontFamily: 'Quicksand-Medium',
     marginLeft: 16,
+    flex: 1,
+    lineHeight: 22,
   },
   heroImage: {
     width: 200,
