@@ -79,7 +79,7 @@ async function generateStoryWithAI(context: StoryGenerationContext): Promise<Gen
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
     // Build context for AI
     const experiencesContext = context.userExperiences?.length 
@@ -112,7 +112,7 @@ For DRAWING tasks, provide:
 
 For WRITING tasks, provide:
 - writingPrompt: A creative writing instruction. The user should be asked to write a response that is not less than 400 characters. Make this clear in the prompt.
-- wordLimit: 80-150 words (approximately equivalent to 400+ characters)
+- wordLimit: 10-400 words (flexible range to accommodate different task complexities)
 - timeLimit: 10-15 minutes
 
 The task should:
@@ -137,6 +137,7 @@ IMPORTANT DRAWING PROMPT GUIDELINES:
 IMPORTANT WRITING PROMPT GUIDELINES:
 - Clearly state the minimum character requirement (400 characters)
 - Make the writing task engaging but achievable
+- Word limit can vary from 10-400 words depending on task complexity
 - Examples: "Write about your favorite memory (at least 400 characters)", "Describe a perfect day (minimum 400 characters)"
 
 Respond in this exact JSON format:
@@ -160,7 +161,7 @@ OR for writing tasks:
   "xpReward": 7,
   "postGameFact": "✍️ Educational fact about writing, storytelling, or creativity.",
   "writingPrompt": "Write about your favorite place (at least 400 characters)",
-  "wordLimit": 100,
+  "wordLimit": 150,
   "timeLimit": 12
 }
 `;
@@ -211,7 +212,7 @@ OR for writing tasks:
       }
       
       story.writingPrompt = writingPrompt;
-      story.wordLimit = Math.max(80, Math.min(150, generatedStory.wordLimit || 100));
+      story.wordLimit = Math.max(10, Math.min(400, generatedStory.wordLimit || 100));
     }
 
     return story;
@@ -282,7 +283,7 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
     return {
       ...baseStory,
       writingPrompt: `Write about something that makes you feel "${context.mood}" (at least 400 characters)`,
-      wordLimit: 100
+      wordLimit: Math.floor(Math.random() * 391) + 10 // 10-400 words range
     };
   }
 }
