@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.27.6",
+    "@expo-google-fonts/quicksand": "^0.4.0",
     "@expo/vector-icons": "^14.1.0",
     "@lucide/lab": "^0.1.2",
     "@react-navigation/bottom-tabs": "^7.2.0",

@@ -73,13 +73,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     color: 'white',
     marginTop: 16,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 24,
@@ -95,6 +96,7 @@ const styles = StyleSheet.create({
   featureText: {
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Quicksand-Medium',
     marginLeft: 16,
   },
   heroImage: {
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginRight: 8,
   },
 });

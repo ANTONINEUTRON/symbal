@@ -154,13 +154,14 @@ const styles = StyleSheet.create({
   title: {
     color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginBottom: 12,
     lineHeight: 34,
   },
   description: {
     color: '#E5E7EB',
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -175,6 +176,7 @@ const styles = StyleSheet.create({
   completedText: {
     color: '#E5E7EB',
     fontSize: 16,
+    fontFamily: 'Quicksand-Medium',
     lineHeight: 24,
     fontStyle: 'italic',
   },
@@ -191,13 +193,13 @@ const styles = StyleSheet.create({
   taskTypeText: {
     color: '#8B5CF6',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 6,
   },
   xpReward: {
     color: '#10B981',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   taskDetails: {
     backgroundColor: 'rgba(139, 92, 246, 0.1)',
@@ -209,12 +211,14 @@ const styles = StyleSheet.create({
   taskPrompt: {
     color: '#E5E7EB',
     fontSize: 14,
+    fontFamily: 'Quicksand-Medium',
     lineHeight: 20,
     marginBottom: 4,
   },
   timeLimit: {
     color: '#9CA3AF',
     fontSize: 12,
+    fontFamily: 'Quicksand-Regular',
     fontStyle: 'italic',
   },
   buttonContainer: {
@@ -237,7 +241,7 @@ const styles = StyleSheet.create({
   playButtonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 8,
   },
 });

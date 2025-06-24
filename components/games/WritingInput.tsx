@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   prompt: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 8,
     lineHeight: 22,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   timerText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   writingContainer: {
     flex: 1,
@@ -170,6 +170,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     lineHeight: 24,
     textAlignVertical: 'top',
   },
@@ -184,11 +185,12 @@ const styles = StyleSheet.create({
   },
   wordCount: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   limitReached: {
     color: '#EF4444',
     fontSize: 12,
+    fontFamily: 'Quicksand-Medium',
     fontStyle: 'italic',
   },
   tipsContainer: {
@@ -202,12 +204,13 @@ const styles = StyleSheet.create({
   tipsTitle: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginBottom: 8,
   },
   tip: {
     color: '#E5E7EB',
     fontSize: 12,
+    fontFamily: 'Quicksand-Regular',
     lineHeight: 18,
     marginBottom: 4,
   },
@@ -229,6 +232,6 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
 });

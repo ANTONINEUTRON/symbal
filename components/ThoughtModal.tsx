@@ -178,12 +178,13 @@ const styles = StyleSheet.create({
   title: {
     color: 'white',
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 12,
   },
   description: {
     color: '#E5E7EB',
     fontSize: 14,
+    fontFamily: 'Quicksand-Regular',
     lineHeight: 20,
     marginBottom: 20,
   },
@@ -198,12 +199,13 @@ const styles = StyleSheet.create({
   currentMoodLabel: {
     color: '#EC4899',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
     marginBottom: 4,
   },
   currentMoodText: {
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Quicksand-Medium',
     fontStyle: 'italic',
   },
   inputContainer: {
@@ -215,12 +217,14 @@ const styles = StyleSheet.create({
     padding: 16,
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     minHeight: 80,
     textAlignVertical: 'top',
   },
   wordCount: {
     color: '#9CA3AF',
     fontSize: 12,
+    fontFamily: 'Quicksand-Medium',
     textAlign: 'right',
     marginTop: 8,
   },
@@ -236,6 +240,7 @@ const styles = StyleSheet.create({
   exampleLabel: {
     color: '#9CA3AF',
     fontSize: 12,
+    fontFamily: 'Quicksand-Medium',
     marginBottom: 8,
   },
   exampleTags: {
@@ -252,7 +257,7 @@ const styles = StyleSheet.create({
   exampleTagText: {
     color: '#EC4899',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
   },
   submitButton: {
     borderRadius: 12,
@@ -271,7 +276,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 8,
   },
 });

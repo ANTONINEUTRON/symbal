@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   prompt: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     flex: 1,
     marginRight: 16,
   },
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   timerText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   canvasContainer: {
     alignItems: 'center',
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   paletteLabel: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginBottom: 8,
   },
   colorRow: {
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   toolLabel: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginBottom: 8,
   },
   toolButton: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   toolButtonText: {
     color: '#9CA3AF',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   selectedToolText: {
     color: '#8B5CF6',
@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   clearButtonText: {
     color: '#EF4444',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
   completeButton: {
     flex: 1,
@@ -447,6 +447,6 @@ const styles = StyleSheet.create({
   completeButtonText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
   },
 });

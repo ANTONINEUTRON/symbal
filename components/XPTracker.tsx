@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   symText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 6,
   },
   moodDisplay: {
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   moodText: {
     color: 'white',
     fontSize: 12,
+    fontFamily: 'Quicksand-Medium',
     fontStyle: 'italic',
     textAlign: 'center',
   },

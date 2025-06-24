@@ -344,13 +344,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     color: 'white',
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     color: '#9CA3AF',
     textAlign: 'center',
     lineHeight: 24,
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
   toggleText: {
     color: '#9CA3AF',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
   },
   toggleTextActive: {
     color: 'white',
@@ -407,6 +408,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
     paddingVertical: 16,
     paddingRight: 16,
   },
@@ -416,6 +418,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#EF4444',
     fontSize: 14,
+    fontFamily: 'Quicksand-Medium',
     marginTop: 8,
     marginLeft: 4,
   },
@@ -426,7 +429,7 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: '#8B5CF6',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
   },
   submitButton: {
     borderRadius: 12,
@@ -446,7 +449,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand-Bold',
     marginLeft: 8,
   },
   loadingContainer: {
@@ -476,10 +479,11 @@ const styles = StyleSheet.create({
   footerText: {
     color: '#9CA3AF',
     fontSize: 16,
+    fontFamily: 'Quicksand-Regular',
   },
   footerLink: {
     color: '#8B5CF6',
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: 'Quicksand-SemiBold',
   },
 });
