@@ -1,40 +1,14 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.21.0'
-
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { GoogleGenerativeAI } from 'npm:@google/generative-ai@0.21.0';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-interface StoryGenerationContext {
-  mood: string;
-  userExperiences?: Array<{
-    title: string;
-    description: string;
-    content: any;
-  }>;
-  userLevel?: number;
-  completedGames?: string[];
-  lastTaskTypes?: string[];
-  count?: number;
-}
-
-interface GeneratedStory {
-  title: string;
-  text: string;
-  gameType: string;
-  xpReward: number;
-  postGameFact: string;
-  drawingPrompt?: string;
-  writingPrompt?: string;
-  wordLimit?: number;
-  colorPalette?: string[];
-  timeLimit?: number;
-}
-
-const GAME_TYPES = ['drawing', 'writing'];
-
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
+const GAME_TYPES = [
+  'drawing',
+  'writing'
+];
 const PEXELS_IMAGES = [
   'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg',
   'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg',
@@ -47,49 +21,71 @@ const PEXELS_IMAGES = [
   'https://images.pexels.com/photos/1181723/pexels-photo-1181723.jpeg',
   'https://images.pexels.com/photos/1181319/pexels-photo-1181319.jpeg'
 ];
-
 const COLOR_PALETTES = [
-  ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'],
-  ['#FF9F43', '#10AC84', '#5F27CD', '#00D2D3', '#FF3838', '#FF9FF3'],
-  ['#54A0FF', '#5F27CD', '#00D2D3', '#FF9F43', '#10AC84', '#FF3838'],
-  ['#A55EEA', '#26DE81', '#FD79A8', '#FDCB6E', '#6C5CE7', '#74B9FF'],
-  ['#FF7675', '#74B9FF', '#A29BFE', '#FD79A8', '#FDCB6E', '#00B894']
+  [
+    '#FF6B6B',
+    '#4ECDC4',
+    '#45B7D1',
+    '#96CEB4',
+    '#FFEAA7',
+    '#DDA0DD'
+  ],
+  [
+    '#FF9F43',
+    '#10AC84',
+    '#5F27CD',
+    '#00D2D3',
+    '#FF3838',
+    '#FF9FF3'
+  ],
+  [
+    '#54A0FF',
+    '#5F27CD',
+    '#00D2D3',
+    '#FF9F43',
+    '#10AC84',
+    '#FF3838'
+  ],
+  [
+    '#A55EEA',
+    '#26DE81',
+    '#FD79A8',
+    '#FDCB6E',
+    '#6C5CE7',
+    '#74B9FF'
+  ],
+  [
+    '#FF7675',
+    '#74B9FF',
+    '#A29BFE',
+    '#FD79A8',
+    '#FDCB6E',
+    '#00B894'
+  ]
 ];
-
-function getRandomGameType(excludeTypes: string[] = []): string {
-  const availableTypes = GAME_TYPES.filter(type => !excludeTypes.includes(type));
-  return availableTypes.length > 0 
-    ? availableTypes[Math.floor(Math.random() * availableTypes.length)]
-    : GAME_TYPES[Math.floor(Math.random() * GAME_TYPES.length)];
+function getRandomGameType(excludeTypes = []) {
+  const availableTypes = GAME_TYPES.filter((type)=>!excludeTypes.includes(type));
+  return availableTypes.length > 0 ? availableTypes[Math.floor(Math.random() * availableTypes.length)] : GAME_TYPES[Math.floor(Math.random() * GAME_TYPES.length)];
 }
-
-function getRandomPexelsImage(): string {
+function getRandomPexelsImage() {
   return PEXELS_IMAGES[Math.floor(Math.random() * PEXELS_IMAGES.length)];
 }
-
-function getRandomColorPalette(): string[] {
+function getRandomColorPalette() {
   return COLOR_PALETTES[Math.floor(Math.random() * COLOR_PALETTES.length)];
 }
-
-async function generateStoryWithAI(context: StoryGenerationContext): Promise<GeneratedStory> {
+async function generateStoryWithAI(context) {
   try {
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY not found in environment variables');
     }
-
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash'
+    });
     // Build context for AI
-    const experiencesContext = context.userExperiences?.length 
-      ? `User's custom experiences: ${context.userExperiences.map(exp => `"${exp.title}": ${exp.description}`).join(', ')}`
-      : '';
-
-    const lastTaskTypesContext = context.lastTaskTypes?.length
-      ? `Recent task types to avoid: ${context.lastTaskTypes.join(', ')}`
-      : '';
-
+    const experiencesContext = context.userExperiences?.length ? `User's custom experiences: ${context.userExperiences.map((exp)=>`"${exp.title}": ${exp.description}`).join(', ')}` : '';
+    const lastTaskTypesContext = context.lastTaskTypes?.length ? `Recent task types to avoid: ${context.lastTaskTypes.join(', ')}` : '';
     const prompt = `
 You are a creative AI for an interactive story app called Symbal. Generate a compelling creative task based on the user's current mood and context.
 
@@ -112,7 +108,7 @@ For DRAWING tasks, provide:
 
 For WRITING tasks, provide:
 - writingPrompt: A creative writing instruction. The user should be asked to write a response that is not less than 400 characters. Make this clear in the prompt.
-- wordLimit: 10-400 words (flexible range to accommodate different task complexities)
+- wordLimit: 80-150 words (approximately equivalent to 400+ characters)
 - timeLimit: 10-15 minutes
 
 The task should:
@@ -137,7 +133,6 @@ IMPORTANT DRAWING PROMPT GUIDELINES:
 IMPORTANT WRITING PROMPT GUIDELINES:
 - Clearly state the minimum character requirement (400 characters)
 - Make the writing task engaging but achievable
-- Word limit can vary from 10-400 words depending on task complexity
 - Examples: "Write about your favorite memory (at least 400 characters)", "Describe a perfect day (minimum 400 characters)"
 
 Respond in this exact JSON format:
@@ -161,71 +156,56 @@ OR for writing tasks:
   "xpReward": 7,
   "postGameFact": "✍️ Educational fact about writing, storytelling, or creativity.",
   "writingPrompt": "Write about your favorite place (at least 400 characters)",
-  "wordLimit": 150,
+  "wordLimit": 100,
   "timeLimit": 12
 }
 `;
-
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-
     // Parse JSON response
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('Invalid AI response format');
     }
-
     const generatedStory = JSON.parse(jsonMatch[0]);
-
     // Validate and sanitize the response with strict XP capping
-    const story: GeneratedStory = {
+    const story = {
       title: generatedStory.title?.substring(0, 50) || 'Creative Challenge',
       text: generatedStory.text?.substring(0, 200) || `Your mood of "${context.mood}" inspires a creative task.`,
       gameType: GAME_TYPES.includes(generatedStory.gameType) ? generatedStory.gameType : getRandomGameType(context.lastTaskTypes),
-      xpReward: Math.max(5, Math.min(10, generatedStory.xpReward || 8)), // Strict 5-10 SYM cap
+      xpReward: Math.max(5, Math.min(10, generatedStory.xpReward || 8)),
       postGameFact: generatedStory.postGameFact?.substring(0, 300) || '🎨 Creative expression enhances mental well-being and cognitive flexibility!',
       timeLimit: Math.max(5, Math.min(30, generatedStory.timeLimit || 15))
     };
-
     // Add task-specific properties with enhanced validation
     if (story.gameType === 'drawing') {
       // Ensure drawing prompt is simple and concrete
       let drawingPrompt = generatedStory.drawingPrompt?.substring(0, 200) || `draw a house`;
-      
       // Basic validation to ensure it starts with "draw a/an" and is simple
       if (!drawingPrompt.toLowerCase().startsWith('draw a') && !drawingPrompt.toLowerCase().startsWith('draw an')) {
         drawingPrompt = `draw a ${drawingPrompt.replace(/^draw\s*/i, '').toLowerCase()}`;
       }
-      
       story.drawingPrompt = drawingPrompt;
-      story.colorPalette = Array.isArray(generatedStory.colorPalette) && generatedStory.colorPalette.length === 6
-        ? generatedStory.colorPalette
-        : getRandomColorPalette();
+      story.colorPalette = Array.isArray(generatedStory.colorPalette) && generatedStory.colorPalette.length === 6 ? generatedStory.colorPalette : getRandomColorPalette();
     } else if (story.gameType === 'writing') {
       // Ensure writing prompt mentions character requirement
       let writingPrompt = generatedStory.writingPrompt?.substring(0, 200) || `Write about something that makes you happy (at least 400 characters)`;
-      
       // Add character requirement if not present
       if (!writingPrompt.includes('400 characters') && !writingPrompt.includes('at least 400')) {
         writingPrompt += ' (at least 400 characters)';
       }
-      
       story.writingPrompt = writingPrompt;
-      story.wordLimit = Math.max(10, Math.min(400, generatedStory.wordLimit || 100));
+      story.wordLimit = Math.max(80, Math.min(150, generatedStory.wordLimit || 100));
     }
-
     return story;
-
   } catch (error) {
     console.error('Error generating story with AI:', error);
     throw error;
   }
 }
-
-function generateFallbackStory(context: StoryGenerationContext): GeneratedStory {
+function generateFallbackStory(context) {
   const moodWords = context.mood.toLowerCase().split(' ');
-  
   const themes = {
     hope: {
       title: 'Light & Inspiration',
@@ -248,31 +228,37 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
       fact: '💪 Creative courage builds confidence in all areas of life!'
     }
   };
-
   // Find matching theme or use default
   let selectedTheme = themes.adventure;
-  for (const word of moodWords) {
-    if (themes[word as keyof typeof themes]) {
-      selectedTheme = themes[word as keyof typeof themes];
+  for (const word of moodWords){
+    if (themes[word]) {
+      selectedTheme = themes[word];
       break;
     }
   }
-
   const gameType = getRandomGameType(context.lastTaskTypes);
-
   // Simple concrete objects for drawing fallbacks
-  const simpleObjects = ['car', 'tree', 'house', 'cat', 'book', 'cup', 'flower', 'bird', 'chair', 'apple'];
+  const simpleObjects = [
+    'car',
+    'tree',
+    'house',
+    'cat',
+    'book',
+    'cup',
+    'flower',
+    'bird',
+    'chair',
+    'apple'
+  ];
   const randomObject = simpleObjects[Math.floor(Math.random() * simpleObjects.length)];
-
   const baseStory = {
     title: selectedTheme.title,
     text: selectedTheme.text,
     gameType,
-    xpReward: Math.floor(Math.random() * 6) + 5, // 5-10 SYM range
+    xpReward: Math.floor(Math.random() * 6) + 5,
     postGameFact: selectedTheme.fact,
     timeLimit: 15
   };
-
   if (gameType === 'drawing') {
     return {
       ...baseStory,
@@ -283,104 +269,99 @@ function generateFallbackStory(context: StoryGenerationContext): GeneratedStory 
     return {
       ...baseStory,
       writingPrompt: `Write about something that makes you feel "${context.mood}" (at least 400 characters)`,
-      wordLimit: Math.floor(Math.random() * 391) + 10 // 10-400 words range
+      wordLimit: 100
     };
   }
 }
-
-serve(async (req) => {
+serve(async (req)=>{
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response(null, {
+      headers: corsHeaders
+    });
   }
-
   try {
     if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { 
-          status: 405, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({
+        error: 'Method not allowed'
+      }), {
+        status: 405,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
-
-    const context: StoryGenerationContext = await req.json()
-    
+    const context = await req.json();
     if (!context.mood) {
-      return new Response(
-        JSON.stringify({ error: 'mood is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({
+        error: 'mood is required'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
-
     const count = context.count || 1;
-    const stories: GeneratedStory[] = [];
-
-    for (let i = 0; i < count; i++) {
+    const stories = [];
+    for(let i = 0; i < count; i++){
       try {
         // Add slight variation to context for each story
         const variedContext = {
           ...context,
           mood: context.mood + (i > 0 ? ` (variation ${i + 1})` : '')
         };
-        
         const story = await generateStoryWithAI(variedContext);
         stories.push(story);
-        
         // Small delay to avoid rate limiting
         if (i < count - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve)=>setTimeout(resolve, 500));
         }
       } catch (error) {
         console.error(`Error generating story ${i + 1}:`, error);
         stories.push(generateFallbackStory(context));
       }
     }
-
     // Add image URLs to stories
-    const storiesWithImages = stories.map((story, index) => ({
-      ...story,
-      imageUrl: getRandomPexelsImage(),
-      id: `ai-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`
-    }));
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        stories: storiesWithImages,
-        count: stories.length
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    const storiesWithImages = stories.map((story, index)=>({
+        ...story,
+        imageUrl: getRandomPexelsImage(),
+        id: `ai-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`
+      }));
+    return new Response(JSON.stringify({
+      success: true,
+      stories: storiesWithImages,
+      count: stories.length
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    )
-
-  } catch (error) {
-    console.error('Edge function error:', error)
-    
-    // Return fallback story on error
-    const fallbackStory = generateFallbackStory({ 
-      mood: 'creative inspiration' 
     });
-    
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: 'AI generation failed, using fallback',
-        stories: [{
+  } catch (error) {
+    console.error('Edge function error:', error);
+    // Return fallback story on error
+    const fallbackStory = generateFallbackStory({
+      mood: 'creative inspiration'
+    });
+    return new Response(JSON.stringify({
+      success: false,
+      error: 'AI generation failed, using fallback',
+      stories: [
+        {
           ...fallbackStory,
           imageUrl: getRandomPexelsImage(),
           id: `fallback-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        }]
-      }),
-      { 
-        status: 200, // Return 200 with fallback instead of error
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      ]
+    }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    )
+    });
   }
-})
+});
