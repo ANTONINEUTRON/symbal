@@ -17,7 +17,8 @@ export default function OnboardingScreen() {
       />
 
       <View style={styles.content}>
-        <View style={styles.header}>
+        <View>
+          <View style={styles.header}>
           <Star size={60} color="#8B5CF6" />
           <Text style={styles.title}>Welcome to Symbal</Text>
           <Text style={styles.subtitle}>
@@ -25,10 +26,10 @@ export default function OnboardingScreen() {
           </Text>
         </View>
 
-        <View style={styles.features}>
+        <View>
           <View style={styles.feature}>
             <Zap size={32} color="#EC4899" />
-            <Text style={styles.featureText}>AI-Generated Stories & Creative Tasks</Text>
+            <Text style={styles.featureText}>Stories & Creative Tasks</Text>
           </View>
           <View style={styles.feature}>
             <Play size={32} color="#3B82F6" />
@@ -39,11 +40,7 @@ export default function OnboardingScreen() {
             <Text style={styles.featureText}>Earn SYM, Unlock Premium Features</Text>
           </View>
         </View>
-
-        <Image
-          source={{ uri: 'https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg' }}
-          style={styles.heroImage}
-        />
+        </View>
 
         <TouchableOpacity
           style={styles.startButton}
@@ -82,6 +79,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingTop: 80,
     paddingBottom: 40,
