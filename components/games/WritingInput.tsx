@@ -57,6 +57,9 @@ export default function WritingInput({ prompt, wordLimit, timeLimit, onComplete 
     return '#10B981'; // Green when safe
   };
 
+  // Add a flag to check if the user is typing
+  const isTyping = text.trim().length > 0;
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -86,7 +89,7 @@ export default function WritingInput({ prompt, wordLimit, timeLimit, onComplete 
         {/* Word Count */}
         <View style={styles.wordCountContainer}>
           <Text style={[styles.wordCount, { color: getWordCountColor() }]}>
-            {wordCount} / {wordLimit} words
+            {wordCount} / {wordLimit} characters
           </Text>
           {wordCount >= wordLimit && (
             <Text style={styles.limitReached}>Word limit reached!</Text>
@@ -95,13 +98,15 @@ export default function WritingInput({ prompt, wordLimit, timeLimit, onComplete 
       </View>
 
       {/* Writing Tips */}
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>💡 Writing Tips:</Text>
-        <Text style={styles.tip}>• Let your imagination flow freely</Text>
-        <Text style={styles.tip}>• Don't worry about perfection</Text>
-        <Text style={styles.tip}>• Express your unique voice</Text>
-        <Text style={styles.tip}>• Have fun with the creative process!</Text>
-      </View>
+      {!isTyping && (
+        <View style={styles.tipsContainer}>
+          <Text style={styles.tipsTitle}>💡 Writing Tips:</Text>
+          <Text style={styles.tip}>• Let your imagination flow freely</Text>
+          <Text style={styles.tip}>• Don't worry about perfection</Text>
+          <Text style={styles.tip}>• Express your unique voice</Text>
+          <Text style={styles.tip}>• Have fun with the creative process!</Text>
+        </View>
+      )}
 
       {/* Complete Button */}
       <TouchableOpacity

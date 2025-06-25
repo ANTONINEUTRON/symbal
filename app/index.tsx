@@ -17,6 +17,7 @@ import PostGameInfoModal from '@/components/PostGameInfoModal';
 import { useUserProgress } from '@/hooks/useUserProgress';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAIStoryGeneration } from '@/hooks/useAIStoryGeneration';
+import { loadStoriesFromCache, saveStoriesToCache, clearStoriesCache } from '@/lib/storyCache';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -43,9 +44,31 @@ export default function StoryFeed() {
   // Generate initial story on mount
   useEffect(() => {
     if (storySegments.length === 0) {
-      generateInitialStory();
+      (async () => {
+        // Try to load from cache first
+        const cached = await loadStoriesFromCache();
+        if (cached.length > 0) {
+          setStorySegments(cached);
+        } else {
+          await generateInitialStory();
+        }
+      })();
     }
   }, []);
+
+  // Save to cache whenever storySegments changes
+  useEffect(() => {
+    if (storySegments.length > 0) {
+      saveStoriesToCache(storySegments);
+    }
+  }, [storySegments]);
+
+  // Clear cache on logout
+  useEffect(() => {
+    if (!isSignedIn) {
+      clearStoriesCache();
+    }
+  }, [isSignedIn]);
 
   // Show error if AI generation fails
   useEffect(() => {
@@ -62,6 +85,7 @@ export default function StoryFeed() {
     try {
       const newStories = await generateStory(currentMood, 0);
       setStorySegments(newStories);
+      saveStoriesToCache(newStories);
     } catch (err) {
       console.error('Error generating initial story:', err);
       // Set a fallback story
@@ -88,7 +112,9 @@ export default function StoryFeed() {
       // Generate more story content when reaching the end
       try {
         const newStories = await generateStory(currentMood, currentIndex);
-        setStorySegments([...storySegments, ...newStories]);
+        const updatedStories = [...storySegments, ...newStories];
+        setStorySegments(updatedStories);
+        saveStoriesToCache(updatedStories);
         setCurrentIndex(currentIndex + 1);
       } catch (err) {
         console.error('Error generating new story:', err);
@@ -189,17 +215,15 @@ export default function StoryFeed() {
         console.error('Error updating mood:', error);
       }
     }
-    
-    // Generate new AI-powered story content starting from next screen
     try {
       const newStories = await generateStory(newMood, currentIndex);
       const updatedStories = [...storySegments];
       updatedStories.splice(currentIndex + 1, updatedStories.length - currentIndex - 1, ...newStories);
       setStorySegments(updatedStories);
+      saveStoriesToCache(updatedStories);
     } catch (err) {
       console.error('Error generating story after mood update:', err);
     }
-    
     setMoodModalVisible(false);
   };
 

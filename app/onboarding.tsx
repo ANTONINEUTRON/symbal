@@ -1,10 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Play, Star, Zap } from 'lucide-react-native';
+import { loadStoriesFromCache } from '@/lib/storyCache';
+import { useAIStoryGeneration } from '@/hooks/useAIStoryGeneration';
 
 export default function OnboardingScreen() {
+  const { generateStory } = useAIStoryGeneration();
+
+  useEffect(() => {
+    (async () => {
+      const cached = await loadStoriesFromCache();
+      if (cached.length === 0) {
+        // Generate and cache a story in the background, but don't block UI
+        try {
+          const newStories = await generateStory('creative inspiration', 0);
+          // Save to cache
+          const { saveStoriesToCache } = await import('@/lib/storyCache');
+          saveStoriesToCache(newStories);
+        } catch (e) {
+          // Ignore errors, onboarding UI should not be blocked
+        }
+      }
+    })();
+  }, []);
+
   return (
     <LinearGradient
       colors={['#1a1a2e', '#16213e', '#0f3460']}

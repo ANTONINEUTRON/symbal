@@ -94,16 +94,18 @@ export default function GameModal({ visible, segment, onClose, onComplete }: Gam
           colors={['#1a1a2e', '#16213e', '#0f3460']}
           style={styles.container}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>{segment.title}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <X size={24} color="white" />
-            </TouchableOpacity>
-          </View>
+          <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.header}>
+              <Text style={styles.title}>{segment.title}</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <X size={24} color="white" />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.taskContainer}>
-            {renderTask()}
-          </View>
+            <View style={styles.taskContainer}>
+              {renderTask()}
+            </View>
+          </ScrollView>
 
           {/* AI Judgment Loading */}
           {isJudging && (
